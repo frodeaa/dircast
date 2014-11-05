@@ -19,6 +19,7 @@ func usage() {
 }
 
 type Rss struct {
+	XMLName   xml.Name `xml:"rss"`
 	Channel Channel `xml:"channel"`
 	Version string  `xml:"version,attr"`
 }
