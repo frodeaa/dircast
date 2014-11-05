@@ -10,6 +10,10 @@ import (
 	id3 "github.com/mikkyang/id3-go"
 )
 
+const (
+	Header = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
+)
+
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [dir]\n", os.Args[0])
 }
@@ -131,6 +135,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
+			os.Stdout.WriteString(Header)
 			os.Stdout.Write(output)
 		}
 	}
