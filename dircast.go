@@ -12,12 +12,25 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [dir]\n", os.Args[0])
 }
 
-type Item struct {
-	XMLName xml.Name `xml:"item"`
-	Title   string `xml:"title"`
+type Rss struct {
+	Channel Channel `xml:"channel"`
+	Version string `xml:"version,attr"`
 }
 
-func visitFiles() filepath.WalkFunc {
+type Channel struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Description string `xml:"description"`
+	Items       []Item `xml:"item"`
+}
+
+type Item struct {
+	Title       string `xml:"title"`
+	Link        string `xml:"link"`
+	Description string `xml:"description"`
+}
+
+func visitFiles(channel *Channel) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -36,13 +49,10 @@ func visitFiles() filepath.WalkFunc {
 		}
 
 		if matched {
-			v := &Item{Title: f.Name()}
-			output, err := xml.MarshalIndent(v, "  ", "    ")
-			if err != nil {
-				fmt.Printf("error: %v\n", err)
-			}
-			os.Stdout.Write(output)
+			item := Item{Title: f.Name()}
+			channel.Items = append(channel.Items, item)
 		}
+
 		return nil
 
 	}
@@ -61,7 +71,18 @@ func main() {
 		workDir = flag.Arg(0)
 	}
 
-	err := filepath.Walk(workDir, visitFiles())
+	channel := &Channel{Title: "RSS FEED"}
+	err := filepath.Walk(workDir, visitFiles(channel))
 
-	fmt.Println("WorkDir %s, result %v", workDir, err)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+	} else {
+		output, err := xml.MarshalIndent(&Rss{Channel:*channel, Version:"2.0"}, " ", "	")
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+		}else {
+			os.Stdout.Write(output)
+		}
+	}
+
 }
