@@ -4,14 +4,48 @@ import (
 	"flag"
 	"os"
 	"fmt"
+	"encoding/xml"
+	"path/filepath"
 )
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "usage: %s [dir]\n", os.Args[0])
 }
 
-func buildFeed() {
+type Item struct {
+	XMLName xml.Name `xml:"item"`
+	Title   string `xml:"title"`
+}
 
+func visitFiles() filepath.WalkFunc {
+	return func(path string, f os.FileInfo, err error) error {
+
+		if err != nil {
+			fmt.Println(err) // can't walk here,
+			return nil
+		}
+
+		if !!f.IsDir() {
+			return nil // not a file. ignore
+		}
+
+		matched, err := filepath.Match("*.mp3", f.Name())
+		if err != nil {
+			fmt.Println(err) // malformed pattern
+			return err
+		}
+
+		if matched {
+			v := &Item{Title: f.Name()}
+			output, err := xml.MarshalIndent(v, "  ", "    ")
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+			}
+			os.Stdout.Write(output)
+		}
+		return nil
+
+	}
 }
 
 func main() {
@@ -27,5 +61,7 @@ func main() {
 		workDir = flag.Arg(0)
 	}
 
-	fmt.Println("WorkDir ", workDir)
+	err := filepath.Walk(workDir, visitFiles())
+
+	fmt.Println("WorkDir %s, result %v", workDir, err)
 }
