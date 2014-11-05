@@ -22,6 +22,7 @@ type Rss struct {
 	XMLName   xml.Name `xml:"rss"`
 	Channel Channel `xml:"channel"`
 	Version string  `xml:"version,attr"`
+	NS 		string		`xml:"xmlns:itunes,attr"`
 }
 
 type Channel struct {
@@ -36,6 +37,7 @@ type Item struct {
 	Description string `xml:"description"`
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string          `xml:"guid"`
+	Subtitle	string  `xml:"itunes:subtitle"`
 }
 
 type Enclosure struct {
@@ -132,7 +134,8 @@ func main() {
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 	} else {
-		output, err := xml.MarshalIndent(&Rss{Channel: *channel, Version: "2.0"}, " ", "	")
+		output, err := xml.MarshalIndent(
+			&Rss{Channel: *channel, Version: "2.0", NS:"http://www.itunes.com/dtds/podcast-1.0.dtd"}, " ", "	")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
