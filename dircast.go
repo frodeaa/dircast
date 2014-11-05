@@ -44,7 +44,7 @@ func fileUrl(f os.FileInfo, baseUrl string) ( string, error) {
 	if err != nil {
 		return "", err
 	}
-	Url.Path += url.QueryEscape(f.Name())
+	Url.Path += f.Name()
 	return Url.String(), nil
 }
 
