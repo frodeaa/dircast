@@ -55,7 +55,7 @@ func fileUrl(f os.FileInfo, baseUrl string) ( string, error) {
 	return Url.String(), nil
 }
 
-func title(path string, f os.FileInfo, item *Item) string {
+func addMeta(path string, f os.FileInfo, item *Item) string {
 	fd, err := id3.Open(path)
 	name := ""
 	if err != nil {
@@ -105,8 +105,8 @@ func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 
 			enclosure := Enclosure{Length: f.Size(), Type: "audio/mpeg",
 				Url:url}
-			item := Item{Enclosure: enclosure}
-			title(path, f, &item)
+			item := Item{Enclosure: enclosure, Guid : enclosure.Url}
+			addMeta(path, f, &item)
 			channel.Items = append(channel.Items, item)
 		}
 
@@ -128,8 +128,8 @@ func main() {
 		workDir = flag.Arg(0)
 	}
 
-	publicUrl := "http://localhost:8080"
-	channel := &Channel{Title: "RSS FEED"}
+	publicUrl := "http://kirst.local:8080"
+	channel := &Channel{Title: "RSS FEED", Link: publicUrl}
 	err := filepath.Walk(workDir, visitFiles(channel, publicUrl))
 
 	if err != nil {
