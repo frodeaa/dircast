@@ -4,10 +4,10 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	id3 "github.com/mikkyang/id3-go"
+	"net/url"
 	"os"
 	"path/filepath"
-	"net/url"
-	id3 "github.com/mikkyang/id3-go"
 )
 
 const (
@@ -19,10 +19,10 @@ func usage() {
 }
 
 type Rss struct {
-	XMLName   xml.Name `xml:"rss"`
-	Channel Channel `xml:"channel"`
-	Version string  `xml:"version,attr"`
-	NS 		string		`xml:"xmlns:itunes,attr"`
+	XMLName xml.Name `xml:"rss"`
+	Channel Channel  `xml:"channel"`
+	Version string   `xml:"version,attr"`
+	NS      string   `xml:"xmlns:itunes,attr"`
 }
 
 type Channel struct {
@@ -33,20 +33,20 @@ type Channel struct {
 }
 
 type Item struct {
-	Title       string `xml:"title"`
-	Description string `xml:"description"`
+	Title       string    `xml:"title"`
+	Description string    `xml:"description"`
 	Enclosure   Enclosure `xml:"enclosure"`
-	Guid        string          `xml:"guid"`
-	Subtitle	string  `xml:"itunes:subtitle"`
+	Guid        string    `xml:"guid"`
+	Subtitle    string    `xml:"itunes:subtitle"`
 }
 
 type Enclosure struct {
-	Url         string `xml:"url,attr"`
-	Length      int64  `xml:"length,attr"`
-	Type        string `xml:"type,attr"`
+	Url    string `xml:"url,attr"`
+	Length int64  `xml:"length,attr"`
+	Type   string `xml:"type,attr"`
 }
 
-func fileUrl(f os.FileInfo, baseUrl string) ( string, error) {
+func fileUrl(f os.FileInfo, baseUrl string) (string, error) {
 	Url, err := url.Parse(baseUrl)
 	if err != nil {
 		return "", err
@@ -61,12 +61,12 @@ func addMeta(path string, f os.FileInfo, item *Item) string {
 	if err != nil {
 		item.Title = f.Name()
 	} else {
-		title := fd.Title();
+		title := fd.Title()
 		author := fd.Artist()
 		if len(title) > 0 {
 			item.Title = title
 		} else {
-			item.Title = author;
+			item.Title = author
 			if len(author) > 0 {
 				item.Title += " - "
 			}
@@ -76,7 +76,6 @@ func addMeta(path string, f os.FileInfo, item *Item) string {
 	}
 	return name
 }
-
 
 func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
@@ -102,10 +101,9 @@ func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 				return err
 			}
 
-
 			enclosure := Enclosure{Length: f.Size(), Type: "audio/mpeg",
-				Url:url}
-			item := Item{Enclosure: enclosure, Guid : enclosure.Url}
+				Url: url}
+			item := Item{Enclosure: enclosure, Guid: enclosure.Url}
 			addMeta(path, f, &item)
 			channel.Items = append(channel.Items, item)
 		}
@@ -136,7 +134,7 @@ func main() {
 		fmt.Printf("error: %v\n", err)
 	} else {
 		output, err := xml.MarshalIndent(
-			&Rss{Channel: *channel, Version: "2.0", NS:"http://www.itunes.com/dtds/podcast-1.0.dtd"}, " ", "	")
+			&Rss{Channel: *channel, Version: "2.0", NS: "http://www.itunes.com/dtds/podcast-1.0.dtd"}, " ", "	")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
