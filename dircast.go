@@ -72,6 +72,7 @@ func title(path string, f os.FileInfo, item *Item) string {
 			}
 			item.Title += f.Name()
 		}
+		item.Subtitle = author
 	}
 	return name
 }
