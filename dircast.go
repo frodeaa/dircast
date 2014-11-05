@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"net/url"
+	id3 "github.com/mikkyang/id3-go"
 )
 
 func usage() {
@@ -26,11 +28,49 @@ type Channel struct {
 
 type Item struct {
 	Title       string `xml:"title"`
-	Link        string `xml:"link"`
 	Description string `xml:"description"`
+	Enclosure   Enclosure `xml:"enclosure"`
+	Guid        string          `xml:"guid"`
 }
 
-func visitFiles(channel *Channel) filepath.WalkFunc {
+type Enclosure struct {
+	Url         string `xml:"url,attr"`
+	Length      int64  `xml:"length,attr"`
+	Type        string `xml:"type,attr"`
+}
+
+func fileUrl(f os.FileInfo, baseUrl string) ( string, error) {
+	Url, err := url.Parse(baseUrl)
+	if err != nil {
+		return "", err
+	}
+	Url.Path += url.QueryEscape(f.Name())
+	return Url.String(), nil
+}
+
+func title(path string, f os.FileInfo, item *Item) string {
+	fd, err := id3.Open(path)
+	name := ""
+	if err != nil {
+		item.Title = f.Name()
+	} else {
+		title := fd.Title();
+		author := fd.Artist()
+		if len(title) > 0 {
+			item.Title = title
+		} else {
+			item.Title = author;
+			if len(author) > 0 {
+				item.Title += " - "
+			}
+			item.Title += f.Name()
+		}
+	}
+	return name
+}
+
+
+func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -49,7 +89,16 @@ func visitFiles(channel *Channel) filepath.WalkFunc {
 		}
 
 		if matched {
-			item := Item{Title: f.Name()}
+			url, err := fileUrl(f, publicUrl)
+			if err != nil {
+				return err
+			}
+
+
+			enclosure := Enclosure{Length: f.Size(), Type: "audio/mpeg",
+				Url:url}
+			item := Item{Enclosure: enclosure}
+			title(path, f, &item)
 			channel.Items = append(channel.Items, item)
 		}
 
@@ -71,8 +120,9 @@ func main() {
 		workDir = flag.Arg(0)
 	}
 
+	publicUrl := "http://localhost:8080"
 	channel := &Channel{Title: "RSS FEED"}
-	err := filepath.Walk(workDir, visitFiles(channel))
+	err := filepath.Walk(workDir, visitFiles(channel, publicUrl))
 
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
