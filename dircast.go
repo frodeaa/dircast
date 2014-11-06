@@ -46,12 +46,12 @@ type Enclosure struct {
 	Type   string `xml:"type,attr"`
 }
 
-func fileUrl(f os.FileInfo, baseUrl string) (string, error) {
+func fileUrl(relativePath string, baseUrl string) (string, error) {
 	Url, err := url.Parse(baseUrl)
 	if err != nil {
 		return "", err
 	}
-	Url.Path += f.Name()
+	Url.Path += relativePath
 	return Url.String(), nil
 }
 
@@ -77,7 +77,7 @@ func addMeta(path string, f os.FileInfo, item *Item) string {
 	return name
 }
 
-func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
+func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -95,7 +95,8 @@ func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 		}
 
 		if matched {
-			url, err := fileUrl(f, publicUrl)
+			relativePath := path[len(workDir):]
+			url, err := fileUrl(relativePath, publicUrl)
 			if err != nil {
 				return err
 			}
@@ -138,7 +139,7 @@ func main() {
 
 	publicUrl := "http://kirst.local:8080"
 	channel := &Channel{Title: "RSS FEED", Link: publicUrl}
-	err = filepath.Walk(workDir, visitFiles(channel, publicUrl))
+	err = filepath.Walk(workDir, visitFiles(workDir, channel, publicUrl))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
