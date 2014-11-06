@@ -80,11 +80,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 			return nil
 		}
 
-		matched, err := filepath.Match("*.mp3", f.Name())
-		if err != nil {
-			fmt.Println(err) // malformed pattern
-			return err
-		}
+		matched, _ := filepath.Match("*.mp3", f.Name())
 
 		if matched {
 			relativePath := path[len(workDir)-1:]
