@@ -2,21 +2,17 @@ package main
 
 import (
 	"encoding/xml"
-	"flag"
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
 	"net/url"
 	"os"
 	"path/filepath"
+	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
 	Header = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
 )
-
-func usage() {
-	fmt.Fprintf(os.Stderr, "usage: %s [dir]\n", os.Args[0])
-}
 
 type Rss struct {
 	XMLName xml.Name `xml:"rss"`
@@ -113,33 +109,29 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 	}
 }
 
+var (
+	baseUrl = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").String()
+	path = kingpin.Arg("directory", "directory to read files relative from").Required().String()
+)
+
 func main() {
-	flag.Parse()
 
-	if flag.NArg() > 1 {
-		usage()
-		os.Exit(-1)
-	}
+	kingpin.Version("0.0.1")
+	kingpin.Parse()
 
-	var workDir = os.Args[0]
-	if flag.NArg() == 1 {
-		workDir = flag.Arg(0)
-	}
-
-	file, err := os.Open(workDir)
+	file, err := os.Open(*path)
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 		return
 	}
 	stat, err := file.Stat()
 	if err != nil || !stat.IsDir() {
-		fmt.Printf("%s: %v: Is a file\n", os.Args[0], workDir)
+		fmt.Printf("%s: %v: Is a file\n", os.Args[0], *path)
 		return
 	}
 
-	publicUrl := "http://kirst.local:8080"
-	channel := &Channel{Title: "RSS FEED", Link: publicUrl}
-	err = filepath.Walk(workDir, visitFiles(workDir, channel, publicUrl))
+	channel := &Channel{Title: "RSS FEED", Link: *baseUrl}
+	err = filepath.Walk(*path, visitFiles(*path, channel, *baseUrl))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
