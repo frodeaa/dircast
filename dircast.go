@@ -4,10 +4,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
+	kingpin "gopkg.in/alecthomas/kingpin.v1"
 	"net/url"
 	"os"
 	"path/filepath"
-	kingpin "gopkg.in/alecthomas/kingpin.v1"
 )
 
 const (
@@ -111,7 +111,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 
 var (
 	baseUrl = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").String()
-	path = kingpin.Arg("directory", "directory to read files relative from").Required().String()
+	path    = kingpin.Arg("directory", "directory to read files relative from").Required().String()
 )
 
 func main() {
