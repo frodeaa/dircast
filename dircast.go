@@ -81,12 +81,11 @@ func visitFiles(channel *Channel, publicUrl string) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
-			fmt.Println(err) // can't walk here,
-			return nil
+			return err
 		}
 
 		if !!f.IsDir() {
-			return nil // not a file. ignore
+			return nil
 		}
 
 		matched, err := filepath.Match("*.mp3", f.Name())
@@ -126,12 +125,23 @@ func main() {
 		workDir = flag.Arg(0)
 	}
 
+	file, err := os.Open(workDir)
+	if err != nil {
+		fmt.Printf("%s: %v\n", os.Args[0], err)
+		return
+	}
+	stat, err := file.Stat()
+	if err != nil || !stat.IsDir() {
+		fmt.Printf("%s: %v: Is a file\n", os.Args[0], workDir)
+		return
+	}
+
 	publicUrl := "http://kirst.local:8080"
 	channel := &Channel{Title: "RSS FEED", Link: publicUrl}
-	err := filepath.Walk(workDir, visitFiles(channel, publicUrl))
+	err = filepath.Walk(workDir, visitFiles(channel, publicUrl))
 
 	if err != nil {
-		fmt.Printf("error: %v\n", err)
+		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
 		output, err := xml.MarshalIndent(
 			&Rss{Channel: *channel, Version: "2.0", NS: "http://www.itunes.com/dtds/podcast-1.0.dtd"}, " ", "	")
