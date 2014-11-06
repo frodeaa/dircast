@@ -52,9 +52,8 @@ func fileUrl(relativePath string, baseUrl string) (string, error) {
 	return Url.String(), nil
 }
 
-func addMeta(path string, f os.FileInfo, item *Item) string {
+func addMeta(path string, f os.FileInfo, item *Item) {
 	fd, err := id3.Open(path)
-	name := ""
 	if err != nil {
 		item.Title = f.Name()
 	} else {
@@ -71,7 +70,6 @@ func addMeta(path string, f os.FileInfo, item *Item) string {
 		}
 		item.Subtitle = author
 	}
-	return name
 }
 
 func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.WalkFunc {
