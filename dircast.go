@@ -91,7 +91,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 		}
 
 		if matched {
-			relativePath := path[len(workDir):]
+			relativePath := path[len(workDir)-1:]
 			url, err := fileUrl(relativePath, publicUrl)
 			if err != nil {
 				return err
