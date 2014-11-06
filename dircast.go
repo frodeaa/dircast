@@ -43,13 +43,10 @@ type Enclosure struct {
 	Type   string `xml:"type,attr"`
 }
 
-func fileUrl(relativePath string, baseUrl string) (string, error) {
-	Url, err := url.Parse(baseUrl)
-	if err != nil {
-		return "", err
-	}
+func fileUrl(relativePath string, baseUrl string) string {
+	Url, _ := url.Parse(baseUrl)
 	Url.Path += relativePath
-	return Url.String(), nil
+	return Url.String()
 }
 
 func addMeta(path string, f os.FileInfo, item *Item) {
@@ -91,10 +88,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 
 		if matched {
 			relativePath := path[len(workDir)-1:]
-			url, err := fileUrl(relativePath, publicUrl)
-			if err != nil {
-				return err
-			}
+			url := fileUrl(relativePath, publicUrl)
 
 			enclosure := Enclosure{Length: f.Size(), Type: "audio/mpeg",
 				Url: url}
@@ -109,7 +103,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 }
 
 var (
-	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").String()
+	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").URL()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().String()
@@ -131,8 +125,8 @@ func main() {
 		return
 	}
 
-	channel := &Channel{Title: *title, Link: *baseUrl, Description: *description}
-	err = filepath.Walk(*path, visitFiles(*path, channel, *baseUrl))
+	channel := &Channel{Title: *title, Link: (*baseUrl).String(), Description: *description}
+	err = filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String()))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
