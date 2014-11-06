@@ -106,7 +106,7 @@ var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").URL()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
-	path        = kingpin.Arg("directory", "directory to read files relative from").Required().String()
+	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
 
 func main() {
@@ -114,19 +114,8 @@ func main() {
 	kingpin.Version("0.0.1")
 	kingpin.Parse()
 
-	file, err := os.Open(*path)
-	if err != nil {
-		fmt.Printf("%s: %v\n", os.Args[0], err)
-		return
-	}
-	stat, err := file.Stat()
-	if err != nil || !stat.IsDir() {
-		fmt.Printf("%s: %v: Is a file\n", os.Args[0], *path)
-		return
-	}
-
 	channel := &Channel{Title: *title, Link: (*baseUrl).String(), Description: *description}
-	err = filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String()))
+	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String()))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
