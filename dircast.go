@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	Header = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
+	Header   = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
 	iTunesNs = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 )
 
