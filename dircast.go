@@ -110,9 +110,10 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 }
 
 var (
-	baseUrl = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").String()
-	title   = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
-	path    = kingpin.Arg("directory", "directory to read files relative from").Required().String()
+	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").String()
+	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
+	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
+	path        = kingpin.Arg("directory", "directory to read files relative from").Required().String()
 )
 
 func main() {
@@ -131,7 +132,7 @@ func main() {
 		return
 	}
 
-	channel := &Channel{Title: *title, Link: *baseUrl}
+	channel := &Channel{Title: *title, Link: *baseUrl, Description: *description}
 	err = filepath.Walk(*path, visitFiles(*path, channel, *baseUrl))
 
 	if err != nil {
