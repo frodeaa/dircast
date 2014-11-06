@@ -81,14 +81,10 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 		}
 
 		matched, _ := filepath.Match("*.mp3", f.Name())
-
 		if matched {
-			relativePath := path[len(workDir)-1:]
-			url := fileUrl(relativePath, publicUrl)
-
-			enclosure := Enclosure{Length: f.Size(), Type: "audio/mpeg",
-				Url: url}
-			item := Item{Enclosure: enclosure, Guid: enclosure.Url}
+			url := fileUrl(path[len(workDir)-1:], publicUrl)
+			item := Item{Enclosure: Enclosure{Length: f.Size(), Type: "audio/mpeg",
+				Url: url}, Guid: url}
 			addMeta(path, f, &item)
 			channel.Items = append(channel.Items, item)
 		}
