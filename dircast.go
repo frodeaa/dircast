@@ -12,6 +12,7 @@ import (
 
 const (
 	Header = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
+	iTunesNs = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 )
 
 type Rss struct {
@@ -139,7 +140,7 @@ func main() {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
 		output, err := xml.MarshalIndent(
-			&Rss{Channel: *channel, Version: "2.0", NS: "http://www.itunes.com/dtds/podcast-1.0.dtd"}, "", "  ")
+			&Rss{Channel: *channel, Version: "2.0", NS: iTunesNs}, "", "  ")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
