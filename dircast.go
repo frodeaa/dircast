@@ -27,6 +27,15 @@ type Channel struct {
 	Link        string `xml:"link,omitempty"`
 	Description string `xml:"description,omitempty"`
 	Items       []Item `xml:"item"`
+	Image       Image  `xml:"image,omitempty"`
+}
+
+type Image struct {
+	Title  string `xml:"title,omitempty"`
+	Url    string `xml:"url,omitempty"`
+	Link   string `xml:"link,omitempty"`
+	Width  int    `xml:"width,omitempty"`
+	Height int    `xml:"height,omitempty"`
 }
 
 type Item struct {
