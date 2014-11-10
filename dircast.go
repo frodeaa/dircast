@@ -23,11 +23,11 @@ type Rss struct {
 }
 
 type Channel struct {
-	Title       string `xml:"title,omitempty"`
-	Link        string `xml:"link,omitempty"`
-	Description string `xml:"description,omitempty"`
-	Items       []Item `xml:"item"`
-	Image       Image  `xml:"image,omitempty"`
+	Title       string  `xml:"title,omitempty"`
+	Link        string  `xml:"link,omitempty"`
+	Description string  `xml:"description,omitempty"`
+	Images      []Image `xml:"image,omitempty"`
+	Items       []Item  `xml:"item"`
 }
 
 type Image struct {
