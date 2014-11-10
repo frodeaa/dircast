@@ -23,9 +23,9 @@ type Rss struct {
 }
 
 type Channel struct {
-	Title       string `xml:"title"`
-	Link        string `xml:"link"`
-	Description string `xml:"description"`
+	Title       string `xml:"title,omitempty"`
+	Link        string `xml:"link,omitempty"`
+	Description string `xml:"description,omitempty"`
 	Items       []Item `xml:"item"`
 }
 
