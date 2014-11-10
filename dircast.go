@@ -27,6 +27,7 @@ type Channel struct {
 	Link        string  `xml:"link,omitempty"`
 	Description string  `xml:"description,omitempty"`
 	Images      []Image `xml:"image,omitempty"`
+	Language    string  `xml:"language,omitempty"`
 	Items       []Item  `xml:"item"`
 }
 
@@ -105,6 +106,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 
 var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").URL()
+	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
@@ -115,7 +117,11 @@ func main() {
 	kingpin.Version("0.0.1")
 	kingpin.Parse()
 
-	channel := &Channel{Title: *title, Link: (*baseUrl).String(), Description: *description}
+	channel := &Channel{
+		Title:       *title,
+		Link:        (*baseUrl).String(),
+		Description: *description,
+		Language:    *language}
 	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String()))
 
 	if err != nil {
