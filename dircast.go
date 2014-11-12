@@ -87,7 +87,6 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 		}
 
 		if f.IsDir() && path != workDir && !recursive {
-			fmt.Println("skipping dir: ", path)
 			return filepath.SkipDir
 		}
 
