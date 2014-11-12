@@ -79,11 +79,16 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 	}
 }
 
-func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.WalkFunc {
+func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
 			return err
+		}
+
+		if f.IsDir() && path != workDir && !recursive {
+			fmt.Println("skipping dir: ", path)
+			return filepath.SkipDir
 		}
 
 		if !!f.IsDir() {
@@ -106,6 +111,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string) filepath.Wal
 
 var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").URL()
+	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
@@ -122,7 +128,8 @@ func main() {
 		Link:        (*baseUrl).String(),
 		Description: *description,
 		Language:    *language}
-	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String()))
+
+	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
