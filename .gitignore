@@ -4,3 +4,4 @@ dircast
 pkg
 src
 *.swp
+.DS_Store
