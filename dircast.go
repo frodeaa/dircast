@@ -23,20 +23,11 @@ type Rss struct {
 }
 
 type Channel struct {
-	Title       string  `xml:"title,omitempty"`
-	Link        string  `xml:"link,omitempty"`
-	Description string  `xml:"description,omitempty"`
-	Images      []Image `xml:"image,omitempty"`
-	Language    string  `xml:"language,omitempty"`
-	Items       []Item  `xml:"item"`
-}
-
-type Image struct {
-	Title  string `xml:"title,omitempty"`
-	Url    string `xml:"url,omitempty"`
-	Link   string `xml:"link,omitempty"`
-	Width  int    `xml:"width,omitempty"`
-	Height int    `xml:"height,omitempty"`
+	Title       string `xml:"title,omitempty"`
+	Link        string `xml:"link,omitempty"`
+	Description string `xml:"description,omitempty"`
+	Language    string `xml:"language,omitempty"`
+	Items       []Item `xml:"item"`
 }
 
 type Item struct {
