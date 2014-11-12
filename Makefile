@@ -9,7 +9,7 @@ build:
 	go build -v -o ./bin/dircast dircast.go
 
 fmt:
-	go fmt .
+	go fmt dircast.go
 
 vendor_clean:
 	rm -dRf ./_vendor/src
