@@ -17,6 +17,7 @@ from mp3 files found in a directory
                        RSS channel title
       -d, --description=DESCRIPTION
                        RSS channel description
+      -i, --image=IMAGE  Image to inline in the RSS
       --version        Show application version.
 
     Args:
