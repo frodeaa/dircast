@@ -23,11 +23,12 @@ type Rss struct {
 }
 
 type Channel struct {
-	Title       string `xml:"title,omitempty"`
-	Link        string `xml:"link,omitempty"`
-	Description string `xml:"description,omitempty"`
-	Language    string `xml:"language,omitempty"`
-	Items       []Item `xml:"item"`
+	Title       string  `xml:"title,omitempty"`
+	Link        string  `xml:"link,omitempty"`
+	Description string  `xml:"description,omitempty"`
+	Language    string  `xml:"language,omitempty"`
+	Images      []Image `xml:"image,omitempty"`
+	Items       []Item  `xml:"item"`
 }
 
 type Item struct {
@@ -36,6 +37,12 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string    `xml:"guid"`
 	Subtitle    string    `xml:"itunes:subtitle"`
+}
+
+type Image struct {
+	Link  string `xml:"link"`
+	Title string `xml:"title"`
+	Url   string `xml:"url"`
 }
 
 type Enclosure struct {
@@ -105,6 +112,7 @@ var (
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
+	imageUrl    = kingpin.Flag("image", "Image to inline in the RSS").Short('i').URL()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
 
@@ -120,6 +128,9 @@ func main() {
 		Language:    *language}
 
 	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive))
+	if *imageUrl != nil {
+		channel.Images = append(channel.Images, Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
+	}
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
