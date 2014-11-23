@@ -112,7 +112,7 @@ var (
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
-	imageUrl    = kingpin.Flag("image", "Image to inline in the RSS").Short('i').URL()
+	imageUrl    = kingpin.Flag("image", "Image URL for the RSS channel image").Short('i').URL()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
 
