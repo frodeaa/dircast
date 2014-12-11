@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -37,6 +38,7 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string    `xml:"guid"`
 	Subtitle    string    `xml:"itunes:subtitle"`
+	PubDate     string    `xml:"itunes:pubDate"`
 }
 
 type Image struct {
@@ -57,6 +59,28 @@ func fileUrl(relativePath string, baseUrl string) string {
 	return Url.String()
 }
 
+func formatYear(year string) string {
+	if len(year) > 0 {
+		t, err := time.Parse("20060102", year)
+		if err != nil {
+			t, err = time.Parse("20060102", year[0:len(year)-1])
+			if err == nil {
+				return t.String()
+			}
+			t, err = time.Parse("2006", year)
+			if err == nil {
+				return t.String()
+			}
+			t, err = time.Parse("20060201", year)
+			if err != nil {
+				return ""
+			}
+		}
+		return t.String()
+	}
+	return year
+}
+
 func addMeta(path string, f os.FileInfo, item *Item) {
 	fd, err := id3.Open(path)
 	if err != nil {
@@ -74,6 +98,7 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 			item.Title += f.Name()
 		}
 		item.Subtitle = author
+		item.PubDate = formatYear(fd.Year())
 	}
 }
 
