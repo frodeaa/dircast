@@ -38,7 +38,7 @@ type Item struct {
 	Description string    `xml:"description"`
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string    `xml:"guid"`
-	Subtitle    string    `xml:"itunes:subtitle"`
+	Subtitle    string    `xml:"itunes:subtitle,omitempty"`
 	PubDate     string    `xml:"pubDate,omitempty"`
 }
 
