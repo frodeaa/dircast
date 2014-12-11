@@ -24,6 +24,7 @@ type Rss struct {
 }
 
 type Channel struct {
+	PubDate     string  `xml:"pubDate,omitempty"`
 	Title       string  `xml:"title,omitempty"`
 	Link        string  `xml:"link,omitempty"`
 	Description string  `xml:"description,omitempty"`
@@ -147,6 +148,7 @@ func main() {
 	kingpin.Parse()
 
 	channel := &Channel{
+		PubDate:     time.Now().String(),
 		Title:       *title,
 		Link:        (*baseUrl).String(),
 		Description: *description,
