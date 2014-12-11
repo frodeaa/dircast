@@ -38,7 +38,7 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string    `xml:"guid"`
 	Subtitle    string    `xml:"itunes:subtitle"`
-	PubDate     string    `xml:"itunes:pubDate"`
+	PubDate     string    `xml:"pubDate,omitempty"`
 }
 
 type Image struct {
