@@ -27,7 +27,7 @@ type Channel struct {
 	PubDate     string  `xml:"pubDate,omitempty"`
 	Title       string  `xml:"title,omitempty"`
 	Link        string  `xml:"link,omitempty"`
-	Description string  `xml:"description,omitempty"`
+	Description string  `xml:"description"`
 	Language    string  `xml:"language,omitempty"`
 	Images      []Image `xml:"image,omitempty"`
 	Items       []Item  `xml:"item"`
