@@ -65,19 +65,17 @@ func formatYear(year string) string {
 		t, err := time.Parse("20060102", year)
 		if err != nil {
 			t, err = time.Parse("20060102", year[0:len(year)-1])
-			if err == nil {
-				return t.String()
-			}
-			t, err = time.Parse("2006", year)
-			if err == nil {
-				return t.String()
-			}
-			t, err = time.Parse("20060201", year)
 			if err != nil {
-				return ""
+				t, err = time.Parse("2006", year)
+				if err != nil {
+					t, err = time.Parse("20060201", year)
+					if err != nil {
+						return ""
+					}
+				}
 			}
 		}
-		return t.String()
+		return t.Format(time.RFC1123Z)
 	}
 	return year
 }
@@ -148,7 +146,7 @@ func main() {
 	kingpin.Parse()
 
 	channel := &Channel{
-		PubDate:     time.Now().String(),
+		PubDate:     time.Now().Format(time.RFC1123Z),
 		Title:       *title,
 		Link:        (*baseUrl).String(),
 		Description: *description,
