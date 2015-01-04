@@ -39,7 +39,12 @@ type Item struct {
 	Enclosure   Enclosure `xml:"enclosure"`
 	Guid        string    `xml:"guid"`
 	Subtitle    string    `xml:"itunes:subtitle,omitempty"`
+	Categories  []Text    `xml:"itunes:category,omitempty"`
 	PubDate     string    `xml:"pubDate,omitempty"`
+}
+
+type Text struct {
+	Value string `xml:"text,attr"`
 }
 
 type Image struct {
@@ -97,6 +102,10 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 			item.Title += f.Name()
 		}
 		item.Subtitle = author
+		tcon := fd.Frame("TCON")
+		if tcon != nil {
+			item.Categories = append(item.Categories, Text{Value: tcon.String()})
+		}
 		item.PubDate = formatYear(fd.Year())
 	}
 }
