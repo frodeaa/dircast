@@ -22,9 +22,13 @@ from mp3 files found in a directory
     Args:
       <directory>  directory to read files relative from
 
-## Build and run
+## Build and test
 
-    make vendor_get    # download dependencies
-    make build
+    make
     bin/dircast --help
+
+## Install
+
+    make
+    sudo make install
 
