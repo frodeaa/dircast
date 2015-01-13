@@ -3,6 +3,8 @@
 GOPATH := ${PWD}/_vendor:${GOPATH}
 export GOPATH
 
+prefix=/usr/local
+
 default: build
 
 build:
@@ -19,3 +21,7 @@ vendor_get: vendor_clean
 				 github.com/mikkyang/id3-go \
 				 gopkg.in/alecthomas/kingpin.v1
 
+install: bin/dircast
+	install -m 0755 bin/dircast $(prefix)/bin
+
+.PHONY: install
