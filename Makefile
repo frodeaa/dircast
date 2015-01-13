@@ -1,27 +1,30 @@
-.PHONY: build fmt run test vendor_clean vendor_get
+.PHONY: build fmt run test vendor_clean vendor_get clean install
 
-GOPATH := ${PWD}/_vendor:${GOPATH}
+OUT = ./bin/dircast
+
+GOPATH := ${PWD}/vendor:${GOPATH}
 export GOPATH
 
 prefix=/usr/local
 
 default: build
 
-build:
-	go build -v -o ./bin/dircast dircast.go
-
-fmt:
-	go fmt dircast.go
-
 vendor_clean:
-	rm -dRf ./_vendor/src
+	rm -dRf ./vendor/
 
-vendor_get: vendor_clean
-	GOPATH=${PWD}/_vendor go get -d -u -v \
+vendor:
+	GOPATH=${PWD}/vendor go get -d -u -v \
 				 github.com/mikkyang/id3-go \
 				 gopkg.in/alecthomas/kingpin.v1
 
-install: bin/dircast
-	install -m 0755 bin/dircast $(prefix)/bin
+fmt: dircast.go
+	go $@ dircast.go
 
-.PHONY: install
+build: vendor dircast.go
+	go build -v -o $(OUT) dircast.go
+
+clean:
+	rm -dRf ./bin
+
+install: $(OUT)
+	install -m 0755 $(OUT) $(prefix)/bin
