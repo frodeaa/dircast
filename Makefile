@@ -1,4 +1,4 @@
-.PHONY: build fmt run test vendor_clean vendor_get clean install
+.PHONY: vendor_clean fmt build clean install
 
 OUT = ./bin/dircast
 
@@ -18,7 +18,7 @@ vendor:
 				 gopkg.in/alecthomas/kingpin.v1
 
 fmt: dircast.go
-	go $@ dircast.go
+	go fmt dircast.go
 
 build: vendor dircast.go
 	go build -v -o $(OUT) dircast.go
