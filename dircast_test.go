@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestFormatYear(t *testing.T) {
 	cases := []struct {
@@ -34,4 +37,17 @@ func TestFileUrl(t *testing.T) {
 			t.Errorf("fileUrl(%q, %q) == %q, want %q", c.relativePath, c.baseUrl, got, c.want)
 		}
 	}
+}
+func TestAddMetaPubDate(t *testing.T) {
+	pubDate := "Mon, 25 Nov 2013 00:00:00 +0000"
+	in := Item{}
+	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	f, _ := os.Stat(path)
+
+	addMeta(path, f, &in)
+
+	if in.PubDate != pubDate {
+		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.PubDate, pubDate)
+	}
+
 }
