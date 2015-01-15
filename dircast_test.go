@@ -73,7 +73,10 @@ func TestAddMetaPubDate(t *testing.T) {
 	addMeta(path, f, &in)
 
 	if in.PubDate != pubDate {
-		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.PubDate, pubDate)
+		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.PubDate == %q want %q", in.PubDate, pubDate)
+	}
+
+}
 	}
 
 }
