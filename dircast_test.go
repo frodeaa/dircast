@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"testing"
+	"strings"
 )
 
 func TestFormatYear(t *testing.T) {
@@ -77,6 +78,17 @@ func TestAddMetaPubDate(t *testing.T) {
 	}
 
 }
+
+func TestAddMetaSubTitle(t *testing.T) {
+	subtitle := "Paloalto"
+	in := Item{}
+	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	f, _ := os.Stat(path)
+
+	addMeta(path, f, &in)
+
+	if !strings.HasPrefix(in.Subtitle, subtitle) {
+		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Subtitle ~= %q want %q", in.Subtitle, subtitle)
 	}
 
 }
