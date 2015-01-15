@@ -20,6 +20,12 @@ vendor:
 fmt: dircast.go
 	go fmt dircast.go
 
+fmt_test:
+	go fmt dircast_test.go
+
+test:
+	go test .
+
 build: vendor dircast.go
 	go build -v -o $(OUT) dircast.go
 
