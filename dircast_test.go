@@ -19,3 +19,19 @@ func TestFormatYear(t *testing.T) {
 		}
 	}
 }
+
+func TestFileUrl(t *testing.T) {
+	cases := []struct {
+		relativePath, baseUrl, want string
+	}{
+		{"", "", ""},
+		{"c/d/e", "a/b/", "a/b/c/d/e"},
+		{"c d", "a/b/", "a/b/c%20d"},
+	}
+	for _, c := range cases {
+		got := fileUrl(c.relativePath, c.baseUrl)
+		if got != c.want {
+			t.Errorf("fileUrl(%q, %q) == %q, want %q", c.relativePath, c.baseUrl, got, c.want)
+		}
+	}
+}
