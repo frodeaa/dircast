@@ -38,6 +38,32 @@ func TestFileUrl(t *testing.T) {
 		}
 	}
 }
+
+func TestAddMetaTitle(t *testing.T) {
+	title := "Nice Life (Feat. Basick)"
+	in := Item{}
+	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	f, _ := os.Stat(path)
+
+	addMeta(path, f, &in)
+
+	if in.Title != title {
+		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.Title, title)
+	}
+}
+
+func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
+	title := "test.mp3"
+	in := Item{}
+	f, _ := os.Stat("./vendor/src/github.com/mikkyang/id3-go/test.mp3")
+
+	addMeta("NOT_PATH_TO_FILE", f, &in)
+
+	if in.Title != title {
+		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.Title, title)
+	}
+}
+
 func TestAddMetaPubDate(t *testing.T) {
 	pubDate := "Mon, 25 Nov 2013 00:00:00 +0000"
 	in := Item{}
