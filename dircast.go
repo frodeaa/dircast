@@ -110,7 +110,7 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 	}
 }
 
-func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool) filepath.WalkFunc {
+func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool, fileType string) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -125,7 +125,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 			return nil
 		}
 
-		matched, _ := filepath.Match("*.mp3", f.Name())
+		matched, _ := filepath.Match("*."+fileType, f.Name())
 		if matched {
 			url := fileUrl(path[len(workDir)-1:], publicUrl)
 			item := Item{Enclosure: Enclosure{Length: f.Size(), Type: "audio/mpeg",
@@ -146,6 +146,7 @@ var (
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
 	imageUrl    = kingpin.Flag("image", "Image URL for the RSS channel image").Short('i').URL()
+	fileType    = kingpin.Flag("file", "File type to include in the RSS document").Short('f').Default("mp3").String()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
 
@@ -161,7 +162,7 @@ func main() {
 		Description: *description,
 		Language:    *language}
 
-	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive))
+	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType))
 	if *imageUrl != nil {
 		channel.Images = append(channel.Images, Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
 	}
