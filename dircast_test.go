@@ -92,3 +92,26 @@ func TestAddMetaSubTitle(t *testing.T) {
 	}
 
 }
+
+func TestVisitFiles(t *testing.T) {
+
+	cases := []struct {
+		path, fileType string
+		want int
+	}{
+		{"./vendor/src/github.com/mikkyang/id3-go/","mp3",  0},
+		{"./vendor/src/github.com/mikkyang/id3-go/test.mp3", "mp3", 1},
+	}
+
+	for _, c := range cases {
+		channel := &Channel{}
+		f, e := os.Stat(c.path)
+		v := visitFiles(c.path, channel, "test://", false, c.fileType)
+		v(c.path, f, e)
+		if len(channel.Items) != c.want {
+			t.Errorf("visitFiles(%q, channel,...), len(channel.Items) == %d want %d",
+				c.path, len(channel.Items) , c.want)
+		}
+	}
+
+}
