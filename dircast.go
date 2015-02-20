@@ -157,15 +157,19 @@ func server(output []byte, workdir string, baseUrl *url.URL) {
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
+	rssFile := path + "rss.xml"
 
 	rss := &rssHandler{header: Header, body: output}
-	http.Handle(path+"rss.xml", rss)
+	http.Handle(rssFile, rss)
+
+	fs := http.FileServer(http.Dir(workdir))
+	http.Handle(path, http.StripPrefix(path, fs))
 	http.ListenAndServe(baseUrl.Host, nil)
 
 }
 
 var (
-	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000").URL()
+	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000/").URL()
 	bind        = kingpin.Flag("bind", "Start HTTP server, bind to the server").Short('b').Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
@@ -187,6 +191,10 @@ func main() {
 		Link:        (*baseUrl).String(),
 		Description: *description,
 		Language:    *language}
+
+	if !strings.HasSuffix((*baseUrl).Path, "/") {
+		(*baseUrl).Path = (*baseUrl).Path + "/"
+	}
 
 	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType))
 	if *imageUrl != nil {
