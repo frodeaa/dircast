@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -151,6 +153,25 @@ func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(rss.body)
 }
 
+func writeStartupMsg(workdir string, url string, feed string) {
+	fmt.Printf(
+		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
+		"Starting up dircast, serving", workdir, url)
+	fmt.Printf("Download RSS feed from: %v\n", feed)
+	fmt.Println("Hit CTRL-C to stop the server")
+}
+
+func onShutdown(message string) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Printf("\x1b[31;1m%v\x1b[0m\n", message)
+		os.Exit(1)
+	}()
+}
+
 func server(output []byte, workdir string, baseUrl *url.URL) {
 
 	path := baseUrl.Path
@@ -164,6 +185,11 @@ func server(output []byte, workdir string, baseUrl *url.URL) {
 
 	fs := http.FileServer(http.Dir(workdir))
 	http.Handle(path, http.StripPrefix(path, fs))
+
+	feed := baseUrl.Scheme + "://" + baseUrl.Host + rssFile
+
+	writeStartupMsg(workdir, baseUrl.String(), feed)
+	onShutdown("dircast stopped.")
 	http.ListenAndServe(baseUrl.Host, nil)
 
 }
