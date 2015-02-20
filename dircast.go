@@ -5,9 +5,11 @@ import (
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
+	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -139,8 +141,32 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 	}
 }
 
+type rssHandler struct {
+	header string
+	body   []byte
+}
+
+func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(rss.header))
+	w.Write(rss.body)
+}
+
+func server(output []byte, workdir string, baseUrl *url.URL) {
+
+	path := baseUrl.Path
+	if !strings.HasSuffix(path, "/") {
+		path += "/"
+	}
+
+	rss := &rssHandler{header: Header, body: output}
+	http.Handle(path+"rss.xml", rss)
+	http.ListenAndServe(baseUrl.Host, nil)
+
+}
+
 var (
-	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost").URL()
+	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000").URL()
+	bind        = kingpin.Flag("bind", "Start HTTP server, bind to the server").Short('b').Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
@@ -175,8 +201,12 @@ func main() {
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
-			os.Stdout.WriteString(Header)
-			os.Stdout.Write(output)
+			if *bind {
+				server(output, *path, *baseUrl)
+			} else {
+				os.Stdout.WriteString(Header)
+				os.Stdout.Write(output)
+			}
 		}
 	}
 
