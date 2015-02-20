@@ -7,7 +7,7 @@ from mp3 files found in a directory
 
     Flags:
       --help           Show help.
-      -s, --server=http://localhost:8000
+      -s, --server=http://localhost:8000/
                        hostname (and path) to the root e.g. http://myserver.com/rss
       -b, --bind       Start HTTP server, bind to the server
       -r, --recursive  how to handle the directory scan
