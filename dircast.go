@@ -172,7 +172,7 @@ func onShutdown(message string) {
 	}()
 }
 
-func server(output []byte, workdir string, baseUrl *url.URL) {
+func server(output []byte, workdir string, baseUrl *url.URL) error {
 
 	path := baseUrl.Path
 	if !strings.HasSuffix(path, "/") {
@@ -190,7 +190,8 @@ func server(output []byte, workdir string, baseUrl *url.URL) {
 
 	writeStartupMsg(workdir, baseUrl.String(), feed)
 	onShutdown("dircast stopped.")
-	http.ListenAndServe(baseUrl.Host, nil)
+
+	return http.ListenAndServe(baseUrl.Host, nil)
 
 }
 
@@ -236,7 +237,10 @@ func main() {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			if *bind {
-				server(output, *path, *baseUrl)
+				err = server(output, *path, *baseUrl)
+				if err != nil {
+					fmt.Printf("error: %v\n", err)
+				}
 			} else {
 				os.Stdout.WriteString(Header)
 				os.Stdout.Write(output)
