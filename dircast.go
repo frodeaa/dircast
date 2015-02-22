@@ -146,18 +146,24 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 type rssHandler struct {
 	header string
 	body   []byte
+	fs     http.Handler
+	path   string
 }
 
 func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(rss.header))
-	w.Write(rss.body)
+	path := r.URL.Path
+	if path == "" || path == "/" {
+		w.Write([]byte(rss.header))
+		w.Write(rss.body)
+	} else {
+		http.StripPrefix(rss.path, rss.fs).ServeHTTP(w, r)
+	}
 }
 
-func writeStartupMsg(workdir string, url string, feed string) {
+func writeStartupMsg(workdir string, url string) {
 	fmt.Printf(
 		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
 		"Starting up dircast, serving", workdir, url)
-	fmt.Printf("Download RSS feed from: %v\n", feed)
 	fmt.Println("Hit CTRL-C to stop the server")
 }
 
@@ -178,17 +184,13 @@ func server(output []byte, workdir string, baseUrl *url.URL) error {
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
-	rssFile := path + "rss.xml"
 
-	rss := &rssHandler{header: Header, body: output}
-	http.Handle(rssFile, rss)
+	rss := &rssHandler{header: Header, body: output,
+		fs: http.FileServer(http.Dir(workdir))}
 
-	fs := http.FileServer(http.Dir(workdir))
-	http.Handle(path, http.StripPrefix(path, fs))
+	http.Handle(path, rss)
 
-	feed := baseUrl.Scheme + "://" + baseUrl.Host + rssFile
-
-	writeStartupMsg(workdir, baseUrl.String(), feed)
+	writeStartupMsg(workdir, baseUrl.String())
 	onShutdown("dircast stopped.")
 
 	return http.ListenAndServe(baseUrl.Host, nil)
