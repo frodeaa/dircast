@@ -211,7 +211,7 @@ var (
 
 func main() {
 
-	kingpin.Version("0.0.1")
+	kingpin.Version("0.2.0")
 	kingpin.Parse()
 
 	channel := &Channel{
