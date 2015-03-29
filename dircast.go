@@ -242,7 +242,7 @@ func main() {
 		(*baseUrl).Path = (*baseUrl).Path + "/"
 	}
 
-	if !*bind || *imageUrl != nil{
+	if !*bind || *imageUrl != nil {
 		*autoImage = false
 	}
 
