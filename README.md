@@ -10,7 +10,7 @@ from mp3 files found in a directory
       -s, --server=http://localhost:8000/
                        hostname (and path) to the root e.g. http://myserver.com/rss
       -b, --bind       Start HTTP server, bind to the server
-      -a, --auto-image Resolve RSS image automatically, will use cover art if available, image overrides this option, only available in combination with bind
+      -a, --auto-image Resolve RSS image automatically, will use ID3 attached image, image overrides this option, only available in combination with bind
       -r, --recursive  how to handle the directory scan
       -l, --language=LANGUAGE
                        the language of the RSS document, a ISO 639 value
