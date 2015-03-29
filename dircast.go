@@ -8,6 +8,7 @@ import (
 	id3 "github.com/mikkyang/id3-go"
 	"github.com/mikkyang/id3-go/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -209,6 +210,13 @@ func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func Log(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		handler.ServeHTTP(w, r)
+	})
+}
+
 func writeStartupMsg(workdir string, url string) {
 	fmt.Printf(
 		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
@@ -227,7 +235,7 @@ func onShutdown(message string) {
 	}()
 }
 
-func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image) error {
+func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image, logEnabled bool) error {
 
 	path := baseUrl.Path
 	if !strings.HasSuffix(path, "/") {
@@ -242,6 +250,9 @@ func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image)
 	writeStartupMsg(workdir, baseUrl.String())
 	onShutdown("dircast stopped.")
 
+	if logEnabled {
+		http.ListenAndServe(baseUrl.Host, Log(http.DefaultServeMux))
+	}
 	return http.ListenAndServe(baseUrl.Host, nil)
 
 }
@@ -249,6 +260,7 @@ func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image)
 var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000/").URL()
 	bind        = kingpin.Flag("bind", "Start HTTP server, bind to the server").Short('b').Bool()
+	logEnabled  = kingpin.Flag("log", "Enable log of HTTP requests").Short('l').Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
 	autoImage   = kingpin.Flag("auto-image", "Resolve RSS image automatically, will use ID3 attached image, image overrides this option, only available in combination with bind").Short('a').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
@@ -297,7 +309,7 @@ func main() {
 				if *autoImage {
 					blobImages = channel.Images
 				}
-				err = server(output, *path, *baseUrl, blobImages)
+				err = server(output, *path, *baseUrl, blobImages, *logEnabled)
 				if err != nil {
 					fmt.Printf("error: %v\n", err)
 				}
