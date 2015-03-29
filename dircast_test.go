@@ -106,7 +106,7 @@ func TestVisitFiles(t *testing.T) {
 	for _, c := range cases {
 		channel := &Channel{}
 		f, e := os.Stat(c.path)
-		v := visitFiles(c.path, channel, "test://", false, c.fileType)
+		v := visitFiles(c.path, channel, "test://", false, c.fileType, false)
 		v(c.path, f, e)
 		if len(channel.Items) != c.want {
 			t.Errorf("visitFiles(%q, channel,...), len(channel.Items) == %d want %d",
