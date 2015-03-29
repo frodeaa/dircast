@@ -91,7 +91,8 @@ func formatYear(year string) string {
 	return year
 }
 
-func addMeta(path string, f os.FileInfo, item *Item) {
+func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
+	var images []Image
 	fd, err := id3.Open(path)
 	if err != nil {
 		item.Title = f.Name()
@@ -115,6 +116,7 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 		}
 		item.PubDate = formatYear(fd.Year())
 	}
+	return images
 }
 
 func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
@@ -137,7 +139,13 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 			url := fileUrl(path[len(workDir)-1:], publicUrl)
 			item := Item{Enclosure: Enclosure{Length: f.Size(), Type: "audio/mpeg",
 				Url: url}, Guid: url}
-			addMeta(path, f, &item)
+			images := addMeta(path, f, &item, autoImage && len(channel.Images) == 0)
+			if len(images) > 0 {
+				channel.Images = images
+				images[0].Title = channel.Title
+				images[0].Link = channel.Link
+				images[0].Url = channel.Link + images[0].Url
+			}
 			channel.Items = append(channel.Items, item)
 		}
 

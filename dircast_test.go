@@ -46,7 +46,7 @@ func TestAddMetaTitle(t *testing.T) {
 	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
-	addMeta(path, f, &in)
+	addMeta(path, f, &in, false)
 
 	if in.Title != title {
 		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.Title, title)
@@ -58,7 +58,7 @@ func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
 	in := Item{}
 	f, _ := os.Stat("./vendor/src/github.com/mikkyang/id3-go/test.mp3")
 
-	addMeta("NOT_PATH_TO_FILE", f, &in)
+	addMeta("NOT_PATH_TO_FILE", f, &in, false)
 
 	if in.Title != title {
 		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Title == %q want %q", in.Title, title)
@@ -71,7 +71,7 @@ func TestAddMetaPubDate(t *testing.T) {
 	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
-	addMeta(path, f, &in)
+	addMeta(path, f, &in, false)
 
 	if in.PubDate != pubDate {
 		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.PubDate == %q want %q", in.PubDate, pubDate)
@@ -85,7 +85,7 @@ func TestAddMetaSubTitle(t *testing.T) {
 	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
-	addMeta(path, f, &in)
+	addMeta(path, f, &in, false)
 
 	if !strings.HasPrefix(in.Subtitle, subtitle) {
 		t.Errorf("addMeta(<test.mp3>, <FileInfo>, <Item>) Item.Subtitle ~= %q want %q", in.Subtitle, subtitle)
