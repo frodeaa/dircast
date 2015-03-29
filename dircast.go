@@ -96,6 +96,7 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 	if err != nil {
 		item.Title = f.Name()
 	} else {
+		defer fd.Close()
 		title := fd.Title()
 		author := fd.Artist()
 		if len(title) > 0 {
