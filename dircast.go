@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/xml"
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
+	"github.com/mikkyang/id3-go/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
 	"net/http"
 	"net/url"
@@ -90,6 +93,24 @@ func formatYear(year string) string {
 	return year
 }
 
+func readImages(fd *id3.File) []Image {
+	var images []Image
+
+	apic := fd.Frame("APIC")
+	if apic != nil {
+		switch t := apic.(type) {
+		case *v2.ImageFrame:
+			v2if := v2.ImageFrame(*t)
+			hasher := sha1.New()
+			hasher.Write(v2if.Data())
+			images = append(images, Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
+				Blob: v2if.Data()})
+		}
+	}
+
+	return images
+}
+
 func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 	var images []Image
 	fd, err := id3.Open(path)
@@ -114,6 +135,9 @@ func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 			item.Categories = append(item.Categories, Text{Value: tcon.String()})
 		}
 		item.PubDate = formatYear(fd.Year())
+		if autoImage {
+			images = readImages(fd)
+		}
 	}
 	return images
 }
@@ -164,7 +188,7 @@ type rssHandler struct {
 func findBlob(path string, blobImages []Image) []byte {
 	blob := []byte{}
 	for i := 0; i < len(blobImages); i++ {
-		if blobImages[i].Url == path {
+		if strings.HasSuffix(blobImages[i].Url, path) {
 			blob = blobImages[i].Blob
 		}
 	}
