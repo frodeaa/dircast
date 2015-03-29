@@ -5,6 +5,7 @@ import (
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -55,6 +56,7 @@ type Image struct {
 	Link  string `xml:"link"`
 	Title string `xml:"title"`
 	Url   string `xml:"url"`
+	Blob  []byte
 }
 
 type Enclosure struct {
@@ -114,7 +116,7 @@ func addMeta(path string, f os.FileInfo, item *Item) {
 	}
 }
 
-func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool, fileType string) filepath.WalkFunc {
+func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -144,10 +146,22 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 }
 
 type rssHandler struct {
-	header string
-	body   []byte
-	fs     http.Handler
-	path   string
+	header     string
+	body       []byte
+	fs         http.Handler
+	path       string
+	blobImages []Image
+}
+
+func findBlob(path string, blobImages []Image) []byte {
+	blob := []byte{}
+	for i := 0; i < len(blobImages); i++ {
+		if blobImages[i].Url == path {
+			blob = blobImages[i].Blob
+		}
+	}
+	return blob
+
 }
 
 func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -155,6 +169,8 @@ func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if path == "" || path == "/" {
 		w.Write([]byte(rss.header))
 		w.Write(rss.body)
+	} else if len(rss.blobImages) > 0 && len(findBlob(path, rss.blobImages)) > 0 {
+		w.Write(findBlob(path, rss.blobImages))
 	} else {
 		http.StripPrefix(rss.path, rss.fs).ServeHTTP(w, r)
 	}
@@ -178,7 +194,7 @@ func onShutdown(message string) {
 	}()
 }
 
-func server(output []byte, workdir string, baseUrl *url.URL) error {
+func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image) error {
 
 	path := baseUrl.Path
 	if !strings.HasSuffix(path, "/") {
@@ -186,7 +202,7 @@ func server(output []byte, workdir string, baseUrl *url.URL) error {
 	}
 
 	rss := &rssHandler{header: Header, body: output,
-		fs: http.FileServer(http.Dir(workdir))}
+		fs: http.FileServer(http.Dir(workdir)), blobImages: blobImages}
 
 	http.Handle(path, rss)
 
@@ -233,7 +249,7 @@ func main() {
 	if *imageUrl != nil {
 		channel.Images = append(channel.Images, Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
 	}
-	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType))
+	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType, *autoImage))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
@@ -244,7 +260,14 @@ func main() {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			if *bind {
-				err = server(output, *path, *baseUrl)
+				var blobImages []Image
+				if *autoImage {
+					res, _ := http.Get("http://anonpic.be/i/CULX.jpg")
+					blob, _ := ioutil.ReadAll(res.Body)
+					channel.Images = append(channel.Images, Image{Url: "/myimage", Blob: blob})
+					blobImages = channel.Images
+				}
+				err = server(output, *path, *baseUrl, blobImages)
 				if err != nil {
 					fmt.Printf("error: %v\n", err)
 				}
