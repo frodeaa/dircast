@@ -201,6 +201,7 @@ var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000/").URL()
 	bind        = kingpin.Flag("bind", "Start HTTP server, bind to the server").Short('b').Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
+	autoImage   = kingpin.Flag("auto-image", "Resolve RSS image automatically, will use cover art if available, image overrides this option").Short('a').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
