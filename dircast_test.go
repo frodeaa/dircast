@@ -31,6 +31,7 @@ func TestFileUrl(t *testing.T) {
 		{"", "", ""},
 		{"c/d/e", "a/b/", "a/b/c/d/e"},
 		{"c d", "a/b/", "a/b/c%20d"},
+		{"/c", "a/b/", "a/b/c"},
 	}
 	for _, c := range cases {
 		got := fileUrl(c.relativePath, c.baseUrl)
