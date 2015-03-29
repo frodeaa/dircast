@@ -56,7 +56,7 @@ type Image struct {
 	Link  string `xml:"link"`
 	Title string `xml:"title"`
 	Url   string `xml:"url"`
-	Blob  []byte
+	Blob  []byte `xml:"-"`
 }
 
 type Enclosure struct {
