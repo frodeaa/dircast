@@ -226,10 +226,11 @@ func main() {
 		(*baseUrl).Path = (*baseUrl).Path + "/"
 	}
 
-	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType))
 	if *imageUrl != nil {
 		channel.Images = append(channel.Images, Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
+		*autoImage = false
 	}
+	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
