@@ -70,6 +70,7 @@ type Enclosure struct {
 func fileUrl(relativePath string, baseUrl string) string {
 	Url, _ := url.Parse(baseUrl)
 	Url.Path += relativePath
+	Url.Path = strings.Replace(Url.Path, "//", "/", -1)
 	return Url.String()
 }
 
