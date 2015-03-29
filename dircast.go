@@ -5,7 +5,6 @@ import (
 	"fmt"
 	id3 "github.com/mikkyang/id3-go"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -271,9 +270,6 @@ func main() {
 			if *bind {
 				var blobImages []Image
 				if *autoImage {
-					res, _ := http.Get("http://anonpic.be/i/CULX.jpg")
-					blob, _ := ioutil.ReadAll(res.Body)
-					channel.Images = append(channel.Images, Image{Url: "/myimage", Blob: blob})
 					blobImages = channel.Images
 				}
 				err = server(output, *path, *baseUrl, blobImages)
