@@ -120,8 +120,9 @@ func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 		item.Title = f.Name()
 	} else {
 		defer fd.Close()
-		title := fd.Title()
-		author := fd.Artist()
+		cutset := string(rune(0))
+		title := strings.TrimRight(fd.Title(), cutset)
+		author := strings.TrimRight(fd.Artist(), cutset)
 		if len(title) > 0 {
 			item.Title = title
 		} else {
@@ -129,14 +130,14 @@ func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 			if len(author) > 0 {
 				item.Title += " - "
 			}
-			item.Title += f.Name()
+			item.Title += strings.TrimRight(f.Name(), cutset)
 		}
 		item.Subtitle = author
 		tcon := fd.Frame("TCON")
 		if tcon != nil {
-			item.Categories = append(item.Categories, Text{Value: tcon.String()})
+			item.Categories = append(item.Categories, Text{Value: strings.TrimRight(tcon.String(), cutset)})
 		}
-		item.PubDate = formatYear(fd.Year())
+		item.PubDate = strings.TrimRight(formatYear(fd.Year()), cutset)
 		if autoImage {
 			images = readImages(fd)
 		}
