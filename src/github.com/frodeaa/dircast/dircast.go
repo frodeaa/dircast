@@ -1,131 +1,13 @@
 package main
 
 import (
-	"crypto/sha1"
-	"encoding/base64"
 	"fmt"
 	dircast "github.com/frodeaa/dircast/core"
-	id3 "github.com/mikkyang/id3-go"
-	"github.com/mikkyang/id3-go/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
-
-func fileUrl(relativePath string, baseUrl string) string {
-	Url, _ := url.Parse(baseUrl)
-	Url.Path += relativePath
-	Url.Path = strings.Replace(Url.Path, "//", "/", -1)
-	return Url.String()
-}
-
-func formatYear(year string) string {
-	if len(year) > 0 {
-		t, err := time.Parse("20060102", year)
-		if err != nil {
-			t, err = time.Parse("20060102", year[0:len(year)-1])
-			if err != nil {
-				t, err = time.Parse("2006", year)
-				if err != nil {
-					t, err = time.Parse("20060201", year)
-					if err != nil {
-						return ""
-					}
-				}
-			}
-		}
-		return t.Format(time.RFC1123Z)
-	}
-	return year
-}
-
-func readImages(fd *id3.File) []dircast.Image {
-	var images []dircast.Image
-
-	apic := fd.Frame("APIC")
-	if apic != nil {
-		switch t := apic.(type) {
-		case *v2.ImageFrame:
-			v2if := v2.ImageFrame(*t)
-			hasher := sha1.New()
-			hasher.Write(v2if.Data())
-			images = append(images, dircast.Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
-				Blob: v2if.Data()})
-		}
-	}
-
-	return images
-}
-
-func addMeta(path string, f os.FileInfo, item *dircast.Item, autoImage bool) []dircast.Image {
-	var images []dircast.Image
-	fd, err := id3.Open(path)
-	if err != nil {
-		item.Title = f.Name()
-	} else {
-		defer fd.Close()
-		cutset := string(rune(0))
-		title := strings.TrimRight(fd.Title(), cutset)
-		author := strings.TrimRight(fd.Artist(), cutset)
-		if len(title) > 0 {
-			item.Title = title
-		} else {
-			item.Title = author
-			if len(author) > 0 {
-				item.Title += " - "
-			}
-			item.Title += strings.TrimRight(f.Name(), cutset)
-		}
-		item.Subtitle = author
-		tcon := fd.Frame("TCON")
-		if tcon != nil {
-			item.Categories = append(item.Categories, dircast.Text{Value: strings.TrimRight(tcon.String(), cutset)})
-		}
-		item.PubDate = strings.TrimRight(formatYear(fd.Year()), cutset)
-		if autoImage {
-			images = readImages(fd)
-		}
-	}
-	return images
-}
-
-func visitFiles(workDir string, channel *dircast.Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
-	return func(path string, f os.FileInfo, err error) error {
-
-		if err != nil {
-			return err
-		}
-
-		if f.IsDir() && path != workDir && !recursive {
-			return filepath.SkipDir
-		}
-
-		if !!f.IsDir() {
-			return nil
-		}
-
-		matched, _ := filepath.Match("*."+fileType, f.Name())
-		if matched {
-			url := fileUrl(path[len(workDir)-1:], publicUrl)
-			item := dircast.Item{Enclosure: dircast.Enclosure{Length: f.Size(), Type: "audio/mpeg",
-				Url: url}, Guid: url}
-			images := addMeta(path, f, &item, autoImage && len(channel.Images) == 0)
-			if len(images) > 0 {
-				channel.Images = images
-				images[0].Title = channel.Title
-				images[0].Link = channel.Link
-				images[0].Url = channel.Link + images[0].Url
-			}
-			channel.Items = append(channel.Items, item)
-		}
-
-		return nil
-
-	}
-}
 
 var (
 	baseUrl     = kingpin.Flag("server", "hostname (and path) to the root e.g. http://myserver.com/rss").Short('s').Default("http://localhost:8000/").URL()
@@ -146,13 +28,6 @@ func main() {
 	kingpin.Version("0.3.0")
 	kingpin.Parse()
 
-	channel := &dircast.Channel{
-		PubDate:     time.Now().Format(time.RFC1123Z),
-		Title:       *title,
-		Link:        (*baseUrl).String(),
-		Description: *description,
-		Language:    *language}
-
 	if !strings.HasSuffix((*baseUrl).Path, "/") {
 		(*baseUrl).Path = (*baseUrl).Path + "/"
 	}
@@ -161,26 +36,25 @@ func main() {
 		*autoImage = false
 	}
 
+	source := dircast.NewSource(*path, *recursive, (*baseUrl).String())
+	source.SetChannel(*title, (*baseUrl).String(), *description, *language)
+	source.SetFileType(*fileType)
+	source.SetAutoImage(*autoImage)
 	if *imageUrl != nil {
-		channel.Images = append(channel.Images, dircast.Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
+		source.SetChannelImageUrl((*imageUrl).String())
 	}
-	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType, *autoImage))
+	err := filepath.Walk(*path, source.HandleWalk())
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
-		rssFeed := &dircast.Rss{Channel: *channel, Version: "2.0", NS: dircast.ITunesNs}
 		if *bind {
-			var blobImages []dircast.Image
-			if *autoImage {
-				blobImages = channel.Images
-			}
-			err = dircast.Server(*rssFeed, *path, *baseUrl, blobImages, *logEnabled)
+			err = dircast.Server(*source, *logEnabled)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
 			}
 		} else {
-			rssFeed.Out(os.Stdout)
+			source.Rss().Out(os.Stdout)
 		}
 	}
 

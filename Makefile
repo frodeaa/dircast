@@ -22,7 +22,7 @@ fmt:
 	go fmt $(DIRCAST)
 
 test:
-	go test $(DIRCAST)
+	go test $(DIRCAST) $(DIRCAST)/core
 
 build: vendor
 	go build -v -o $(OUT) $(DIRCAST)
