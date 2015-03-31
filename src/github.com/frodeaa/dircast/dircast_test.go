@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
-	"fmt"
+	rss "github.com/frodeaa/dircast/rss"
 )
 
 func TestFormatYear(t *testing.T) {
@@ -44,7 +45,7 @@ func TestFileUrl(t *testing.T) {
 
 func TestAddMetaTitle(t *testing.T) {
 	title := "Nice Life (Feat. Basick)"
-	in := Item{}
+	in := rss.Item{}
 	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
@@ -57,7 +58,7 @@ func TestAddMetaTitle(t *testing.T) {
 
 func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
 	title := "test.mp3"
-	in := Item{}
+	in := rss.Item{}
 	f, e := os.Stat("./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3")
 	if e != nil {
 		fmt.Errorf(" A %s", e)
@@ -72,7 +73,7 @@ func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
 
 func TestAddMetaPubDate(t *testing.T) {
 	pubDate := "Mon, 25 Nov 2013 00:00:00 +0000"
-	in := Item{}
+	in := rss.Item{}
 	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
@@ -86,7 +87,7 @@ func TestAddMetaPubDate(t *testing.T) {
 
 func TestAddMetaSubTitle(t *testing.T) {
 	subtitle := "Paloalto"
-	in := Item{}
+	in := rss.Item{}
 	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
@@ -109,7 +110,7 @@ func TestVisitFiles(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		channel := &Channel{}
+		channel := &rss.Channel{}
 		f, e := os.Stat(c.path)
 		v := visitFiles(c.path, channel, "test://", false, c.fileType, false)
 		v(c.path, f, e)

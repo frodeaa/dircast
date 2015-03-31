@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
+	rss "github.com/frodeaa/dircast/rss"
 	id3 "github.com/mikkyang/id3-go"
 	"github.com/mikkyang/id3-go/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
@@ -23,50 +24,6 @@ const (
 	Header   = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
 	iTunesNs = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 )
-
-type Rss struct {
-	XMLName xml.Name `xml:"rss"`
-	Channel Channel  `xml:"channel"`
-	Version string   `xml:"version,attr"`
-	NS      string   `xml:"xmlns:itunes,attr"`
-}
-
-type Channel struct {
-	PubDate     string  `xml:"pubDate,omitempty"`
-	Title       string  `xml:"title,omitempty"`
-	Link        string  `xml:"link,omitempty"`
-	Description string  `xml:"description"`
-	Language    string  `xml:"language,omitempty"`
-	Images      []Image `xml:"image,omitempty"`
-	Items       []Item  `xml:"item"`
-}
-
-type Item struct {
-	Title       string    `xml:"title"`
-	Description string    `xml:"description"`
-	Enclosure   Enclosure `xml:"enclosure"`
-	Guid        string    `xml:"guid"`
-	Subtitle    string    `xml:"itunes:subtitle,omitempty"`
-	Categories  []Text    `xml:"itunes:category,omitempty"`
-	PubDate     string    `xml:"pubDate,omitempty"`
-}
-
-type Text struct {
-	Value string `xml:"text,attr"`
-}
-
-type Image struct {
-	Link  string `xml:"link"`
-	Title string `xml:"title"`
-	Url   string `xml:"url"`
-	Blob  []byte `xml:"-"`
-}
-
-type Enclosure struct {
-	Url    string `xml:"url,attr"`
-	Length int64  `xml:"length,attr"`
-	Type   string `xml:"type,attr"`
-}
 
 func fileUrl(relativePath string, baseUrl string) string {
 	Url, _ := url.Parse(baseUrl)
@@ -95,8 +52,8 @@ func formatYear(year string) string {
 	return year
 }
 
-func readImages(fd *id3.File) []Image {
-	var images []Image
+func readImages(fd *id3.File) []rss.Image {
+	var images []rss.Image
 
 	apic := fd.Frame("APIC")
 	if apic != nil {
@@ -105,7 +62,7 @@ func readImages(fd *id3.File) []Image {
 			v2if := v2.ImageFrame(*t)
 			hasher := sha1.New()
 			hasher.Write(v2if.Data())
-			images = append(images, Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
+			images = append(images, rss.Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
 				Blob: v2if.Data()})
 		}
 	}
@@ -113,8 +70,8 @@ func readImages(fd *id3.File) []Image {
 	return images
 }
 
-func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
-	var images []Image
+func addMeta(path string, f os.FileInfo, item *rss.Item, autoImage bool) []rss.Image {
+	var images []rss.Image
 	fd, err := id3.Open(path)
 	if err != nil {
 		item.Title = f.Name()
@@ -135,7 +92,7 @@ func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 		item.Subtitle = author
 		tcon := fd.Frame("TCON")
 		if tcon != nil {
-			item.Categories = append(item.Categories, Text{Value: strings.TrimRight(tcon.String(), cutset)})
+			item.Categories = append(item.Categories, rss.Text{Value: strings.TrimRight(tcon.String(), cutset)})
 		}
 		item.PubDate = strings.TrimRight(formatYear(fd.Year()), cutset)
 		if autoImage {
@@ -145,7 +102,7 @@ func addMeta(path string, f os.FileInfo, item *Item, autoImage bool) []Image {
 	return images
 }
 
-func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
+func visitFiles(workDir string, channel *rss.Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -163,7 +120,7 @@ func visitFiles(workDir string, channel *Channel, publicUrl string, recursive bo
 		matched, _ := filepath.Match("*."+fileType, f.Name())
 		if matched {
 			url := fileUrl(path[len(workDir)-1:], publicUrl)
-			item := Item{Enclosure: Enclosure{Length: f.Size(), Type: "audio/mpeg",
+			item := rss.Item{Enclosure: rss.Enclosure{Length: f.Size(), Type: "audio/mpeg",
 				Url: url}, Guid: url}
 			images := addMeta(path, f, &item, autoImage && len(channel.Images) == 0)
 			if len(images) > 0 {
@@ -185,10 +142,10 @@ type rssHandler struct {
 	body       []byte
 	fs         http.Handler
 	path       string
-	blobImages []Image
+	blobImages []rss.Image
 }
 
-func findBlob(path string, blobImages []Image) []byte {
+func findBlob(path string, blobImages []rss.Image) []byte {
 	blob := []byte{}
 	for i := 0; i < len(blobImages); i++ {
 		if strings.HasSuffix(blobImages[i].Url, path) {
@@ -236,7 +193,7 @@ func onShutdown(message string) {
 	}()
 }
 
-func server(output []byte, workdir string, baseUrl *url.URL, blobImages []Image, logEnabled bool) error {
+func server(output []byte, workdir string, baseUrl *url.URL, blobImages []rss.Image, logEnabled bool) error {
 
 	path := baseUrl.Path
 	if !strings.HasSuffix(path, "/") {
@@ -277,7 +234,7 @@ func main() {
 	kingpin.Version("0.3.0")
 	kingpin.Parse()
 
-	channel := &Channel{
+	channel := &rss.Channel{
 		PubDate:     time.Now().Format(time.RFC1123Z),
 		Title:       *title,
 		Link:        (*baseUrl).String(),
@@ -293,7 +250,7 @@ func main() {
 	}
 
 	if *imageUrl != nil {
-		channel.Images = append(channel.Images, Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
+		channel.Images = append(channel.Images, rss.Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
 	}
 	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType, *autoImage))
 
@@ -301,12 +258,12 @@ func main() {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
 		output, err := xml.MarshalIndent(
-			&Rss{Channel: *channel, Version: "2.0", NS: iTunesNs}, "", "  ")
+			&rss.Rss{Channel: *channel, Version: "2.0", NS: iTunesNs}, "", "  ")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			if *bind {
-				var blobImages []Image
+				var blobImages []rss.Image
 				if *autoImage {
 					blobImages = channel.Images
 				}
