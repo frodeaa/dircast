@@ -5,24 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/xml"
 	"fmt"
-	rss "github.com/frodeaa/dircast/rss"
+	dircast "github.com/frodeaa/dircast/core"
 	id3 "github.com/mikkyang/id3-go"
 	"github.com/mikkyang/id3-go/v2"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
-	"log"
-	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
-)
-
-const (
-	Header   = `<?xml version="1.0" encoding="UTF-8"?>` + "\n"
-	iTunesNs = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 )
 
 func fileUrl(relativePath string, baseUrl string) string {
@@ -52,8 +43,8 @@ func formatYear(year string) string {
 	return year
 }
 
-func readImages(fd *id3.File) []rss.Image {
-	var images []rss.Image
+func readImages(fd *id3.File) []dircast.Image {
+	var images []dircast.Image
 
 	apic := fd.Frame("APIC")
 	if apic != nil {
@@ -62,7 +53,7 @@ func readImages(fd *id3.File) []rss.Image {
 			v2if := v2.ImageFrame(*t)
 			hasher := sha1.New()
 			hasher.Write(v2if.Data())
-			images = append(images, rss.Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
+			images = append(images, dircast.Image{Title: "", Link: "", Url: base64.URLEncoding.EncodeToString(hasher.Sum(nil)),
 				Blob: v2if.Data()})
 		}
 	}
@@ -70,8 +61,8 @@ func readImages(fd *id3.File) []rss.Image {
 	return images
 }
 
-func addMeta(path string, f os.FileInfo, item *rss.Item, autoImage bool) []rss.Image {
-	var images []rss.Image
+func addMeta(path string, f os.FileInfo, item *dircast.Item, autoImage bool) []dircast.Image {
+	var images []dircast.Image
 	fd, err := id3.Open(path)
 	if err != nil {
 		item.Title = f.Name()
@@ -92,7 +83,7 @@ func addMeta(path string, f os.FileInfo, item *rss.Item, autoImage bool) []rss.I
 		item.Subtitle = author
 		tcon := fd.Frame("TCON")
 		if tcon != nil {
-			item.Categories = append(item.Categories, rss.Text{Value: strings.TrimRight(tcon.String(), cutset)})
+			item.Categories = append(item.Categories, dircast.Text{Value: strings.TrimRight(tcon.String(), cutset)})
 		}
 		item.PubDate = strings.TrimRight(formatYear(fd.Year()), cutset)
 		if autoImage {
@@ -102,7 +93,7 @@ func addMeta(path string, f os.FileInfo, item *rss.Item, autoImage bool) []rss.I
 	return images
 }
 
-func visitFiles(workDir string, channel *rss.Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
+func visitFiles(workDir string, channel *dircast.Channel, publicUrl string, recursive bool, fileType string, autoImage bool) filepath.WalkFunc {
 	return func(path string, f os.FileInfo, err error) error {
 
 		if err != nil {
@@ -120,7 +111,7 @@ func visitFiles(workDir string, channel *rss.Channel, publicUrl string, recursiv
 		matched, _ := filepath.Match("*."+fileType, f.Name())
 		if matched {
 			url := fileUrl(path[len(workDir)-1:], publicUrl)
-			item := rss.Item{Enclosure: rss.Enclosure{Length: f.Size(), Type: "audio/mpeg",
+			item := dircast.Item{Enclosure: dircast.Enclosure{Length: f.Size(), Type: "audio/mpeg",
 				Url: url}, Guid: url}
 			images := addMeta(path, f, &item, autoImage && len(channel.Images) == 0)
 			if len(images) > 0 {
@@ -135,84 +126,6 @@ func visitFiles(workDir string, channel *rss.Channel, publicUrl string, recursiv
 		return nil
 
 	}
-}
-
-type rssHandler struct {
-	header     string
-	body       []byte
-	fs         http.Handler
-	path       string
-	blobImages []rss.Image
-}
-
-func findBlob(path string, blobImages []rss.Image) []byte {
-	blob := []byte{}
-	for i := 0; i < len(blobImages); i++ {
-		if strings.HasSuffix(blobImages[i].Url, path) {
-			blob = blobImages[i].Blob
-		}
-	}
-	return blob
-
-}
-
-func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	if path == "" || path == "/" {
-		w.Write([]byte(rss.header))
-		w.Write(rss.body)
-	} else if len(rss.blobImages) > 0 && len(findBlob(path, rss.blobImages)) > 0 {
-		w.Write(findBlob(path, rss.blobImages))
-	} else {
-		http.StripPrefix(rss.path, rss.fs).ServeHTTP(w, r)
-	}
-}
-
-func Log(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
-func writeStartupMsg(workdir string, url string) {
-	fmt.Printf(
-		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
-		"Starting up dircast, serving", workdir, url)
-	fmt.Println("Hit CTRL-C to stop the server")
-}
-
-func onShutdown(message string) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-	go func() {
-		<-c
-		fmt.Printf("\x1b[31;1m%v\x1b[0m\n", message)
-		os.Exit(1)
-	}()
-}
-
-func server(output []byte, workdir string, baseUrl *url.URL, blobImages []rss.Image, logEnabled bool) error {
-
-	path := baseUrl.Path
-	if !strings.HasSuffix(path, "/") {
-		path += "/"
-	}
-
-	rss := &rssHandler{header: Header, body: output,
-		fs: http.FileServer(http.Dir(workdir)), blobImages: blobImages}
-
-	http.Handle(path, rss)
-
-	writeStartupMsg(workdir, baseUrl.String())
-	onShutdown("dircast stopped.")
-
-	if logEnabled {
-		http.ListenAndServe(baseUrl.Host, Log(http.DefaultServeMux))
-	}
-	return http.ListenAndServe(baseUrl.Host, nil)
-
 }
 
 var (
@@ -234,7 +147,7 @@ func main() {
 	kingpin.Version("0.3.0")
 	kingpin.Parse()
 
-	channel := &rss.Channel{
+	channel := &dircast.Channel{
 		PubDate:     time.Now().Format(time.RFC1123Z),
 		Title:       *title,
 		Link:        (*baseUrl).String(),
@@ -250,7 +163,7 @@ func main() {
 	}
 
 	if *imageUrl != nil {
-		channel.Images = append(channel.Images, rss.Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
+		channel.Images = append(channel.Images, dircast.Image{Title: channel.Title, Link: channel.Link, Url: (*imageUrl).String()})
 	}
 	err := filepath.Walk(*path, visitFiles(*path, channel, (*baseUrl).String(), *recursive, *fileType, *autoImage))
 
@@ -258,21 +171,21 @@ func main() {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
 		output, err := xml.MarshalIndent(
-			&rss.Rss{Channel: *channel, Version: "2.0", NS: iTunesNs}, "", "  ")
+			&dircast.Rss{Channel: *channel, Version: "2.0", NS: dircast.ITunesNs}, "", "  ")
 		if err != nil {
 			fmt.Printf("error: %v\n", err)
 		} else {
 			if *bind {
-				var blobImages []rss.Image
+				var blobImages []dircast.Image
 				if *autoImage {
 					blobImages = channel.Images
 				}
-				err = server(output, *path, *baseUrl, blobImages, *logEnabled)
+				err = dircast.Server(output, *path, *baseUrl, blobImages, *logEnabled)
 				if err != nil {
 					fmt.Printf("error: %v\n", err)
 				}
 			} else {
-				os.Stdout.WriteString(Header)
+				os.Stdout.WriteString(dircast.Header)
 				os.Stdout.Write(output)
 			}
 		}

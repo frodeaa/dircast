@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
+	rss "github.com/frodeaa/dircast/core"
 	"os"
 	"strings"
 	"testing"
-	rss "github.com/frodeaa/dircast/rss"
 )
 
 func TestFormatYear(t *testing.T) {
