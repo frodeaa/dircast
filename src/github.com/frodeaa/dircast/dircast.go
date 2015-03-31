@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha1"
 	"encoding/base64"
-	"encoding/xml"
 	"fmt"
 	dircast "github.com/frodeaa/dircast/core"
 	id3 "github.com/mikkyang/id3-go"
@@ -170,24 +169,18 @@ func main() {
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
-		output, err := xml.MarshalIndent(
-			&dircast.Rss{Channel: *channel, Version: "2.0", NS: dircast.ITunesNs}, "", "  ")
-		if err != nil {
-			fmt.Printf("error: %v\n", err)
-		} else {
-			if *bind {
-				var blobImages []dircast.Image
-				if *autoImage {
-					blobImages = channel.Images
-				}
-				err = dircast.Server(output, *path, *baseUrl, blobImages, *logEnabled)
-				if err != nil {
-					fmt.Printf("error: %v\n", err)
-				}
-			} else {
-				os.Stdout.WriteString(dircast.Header)
-				os.Stdout.Write(output)
+		rssFeed := &dircast.Rss{Channel: *channel, Version: "2.0", NS: dircast.ITunesNs}
+		if *bind {
+			var blobImages []dircast.Image
+			if *autoImage {
+				blobImages = channel.Images
 			}
+			err = dircast.Server(*rssFeed, *path, *baseUrl, blobImages, *logEnabled)
+			if err != nil {
+				fmt.Printf("error: %v\n", err)
+			}
+		} else {
+			rssFeed.Out(os.Stdout)
 		}
 	}
 
