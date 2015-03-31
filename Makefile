@@ -1,6 +1,7 @@
 .PHONY: vendor_clean fmt build clean install
 
 OUT = ./bin/dircast
+DIRCAST = github.com/frodeaa/dircast
 
 GOPATH := ${PWD}/vendor:${GOPATH}
 export GOPATH
@@ -17,17 +18,14 @@ vendor:
 				 github.com/mikkyang/id3-go \
 				 gopkg.in/alecthomas/kingpin.v1
 
-fmt: dircast.go
-	go fmt dircast.go
-
-fmt_test:
-	go fmt dircast_test.go
+fmt:
+	go fmt $(DIRCAST)
 
 test:
-	go test .
+	go test $(DIRCAST)
 
-build: vendor dircast.go
-	go build -v -o $(OUT) dircast.go
+build: vendor
+	go build -v -o $(OUT) $(DIRCAST)
 
 clean:
 	rm -dRf ./bin

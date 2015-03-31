@@ -2,6 +2,6 @@
 dircast.iml
 dircast
 pkg
-src
 *.swp
 .DS_Store
+vendor

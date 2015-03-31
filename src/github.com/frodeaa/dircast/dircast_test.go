@@ -4,6 +4,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"fmt"
 )
 
 func TestFormatYear(t *testing.T) {
@@ -44,7 +45,7 @@ func TestFileUrl(t *testing.T) {
 func TestAddMetaTitle(t *testing.T) {
 	title := "Nice Life (Feat. Basick)"
 	in := Item{}
-	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
 	addMeta(path, f, &in, false)
@@ -57,7 +58,10 @@ func TestAddMetaTitle(t *testing.T) {
 func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
 	title := "test.mp3"
 	in := Item{}
-	f, _ := os.Stat("./vendor/src/github.com/mikkyang/id3-go/test.mp3")
+	f, e := os.Stat("./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3")
+	if e != nil {
+		fmt.Errorf(" A %s", e)
+	}
 
 	addMeta("NOT_PATH_TO_FILE", f, &in, false)
 
@@ -69,7 +73,7 @@ func TestAddMetaTitleFallbackOnFilieName(t *testing.T) {
 func TestAddMetaPubDate(t *testing.T) {
 	pubDate := "Mon, 25 Nov 2013 00:00:00 +0000"
 	in := Item{}
-	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
 	addMeta(path, f, &in, false)
@@ -83,7 +87,7 @@ func TestAddMetaPubDate(t *testing.T) {
 func TestAddMetaSubTitle(t *testing.T) {
 	subtitle := "Paloalto"
 	in := Item{}
-	path := "./vendor/src/github.com/mikkyang/id3-go/test.mp3"
+	path := "./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3"
 	f, _ := os.Stat(path)
 
 	addMeta(path, f, &in, false)
@@ -100,8 +104,8 @@ func TestVisitFiles(t *testing.T) {
 		path, fileType string
 		want           int
 	}{
-		{"./vendor/src/github.com/mikkyang/id3-go/", "mp3", 0},
-		{"./vendor/src/github.com/mikkyang/id3-go/test.mp3", "mp3", 1},
+		{"./../../../../vendor/src/github.com/mikkyang/id3-go/", "mp3", 0},
+		{"./../../../../vendor/src/github.com/mikkyang/id3-go/test.mp3", "mp3", 1},
 	}
 
 	for _, c := range cases {
