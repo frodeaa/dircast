@@ -31,12 +31,7 @@ func Log(handler http.Handler) http.Handler {
 }
 
 func isImagePath(path string, images []Image) bool {
-	for i := 0; i < len(images); i++ {
-		if strings.HasSuffix(images[i].Url, path) {
-			return true
-		}
-	}
-	return false
+    return len(images) > 0 && strings.HasSuffix(images[0].Url, path)
 }
 
 func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
