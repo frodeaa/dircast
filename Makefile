@@ -19,7 +19,7 @@ vendor:
 				 gopkg.in/alecthomas/kingpin.v1
 
 fmt:
-	go fmt $(DIRCAST)
+	go fmt $(DIRCAST) $(DIRCAST)/core
 
 test:
 	go test $(DIRCAST) $(DIRCAST)/core
