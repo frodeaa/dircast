@@ -18,6 +18,11 @@ type rssHandler struct {
 	imageBlob []byte
 }
 
+func NewRssHandler(source Source) *rssHandler {
+	return &rssHandler{feed: *source.Rss(),
+		fs: http.FileServer(http.Dir(source.Root)), imageBlob: source.image}
+}
+
 func Log(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
@@ -63,23 +68,18 @@ func onShutdown(message string) {
 	}()
 }
 
-func Server(source Source, logEnabled bool) error {
-
-	url, _ := url.Parse(source.publicUrl)
+func contentPath(url *url.URL) string {
 	path := url.Path
 	if !strings.HasSuffix(path, "/") {
 		path += "/"
 	}
+	return path
+}
 
-	var imageBlob []byte
-	if source.autoImage && len(source.image) > 0 {
-		imageBlob = source.image
-	}
+func Server(source Source, logEnabled bool) error {
 
-	rss := &rssHandler{feed: *source.Rss(),
-		fs: http.FileServer(http.Dir(source.Root)), imageBlob: imageBlob}
-
-	http.Handle(path, rss)
+	url, _ := url.Parse(source.publicUrl)
+	http.Handle(contentPath(url), NewRssHandler(source))
 
 	writeStartupMsg(source.Root, source.publicUrl)
 	onShutdown("dircast stopped.")
