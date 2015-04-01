@@ -27,6 +27,11 @@ type Source struct {
 	image     []byte
 }
 
+type MediaFile struct {
+	*id3.File
+	defaultName string
+}
+
 type MediaItem struct {
 	Item
 }
@@ -34,26 +39,6 @@ type MediaItem struct {
 func trimmed(value string) string {
 	cutset := string(rune(0))
 	return strings.TrimRight(value, cutset)
-}
-
-func formatYear(year string) string {
-	if len(year) > 0 {
-		t, err := time.Parse("20060102", year)
-		if err != nil {
-			t, err = time.Parse("20060102", year[0:len(year)-1])
-			if err != nil {
-				t, err = time.Parse("2006", year)
-				if err != nil {
-					t, err = time.Parse("20060201", year)
-					if err != nil {
-						return ""
-					}
-				}
-			}
-		}
-		return t.Format(time.RFC1123Z)
-	}
-	return trimmed(year)
 }
 
 func fileUrl(relativePath string, baseUrl string) string {
@@ -75,38 +60,66 @@ func readImage(fd *id3.File) []byte {
 	return data
 }
 
+func (fd *MediaFile) titleArtist() string {
+	title := trimmed(fd.Title())
+	author := trimmed(fd.Artist())
+	var res string
+	if len(title) > 0 {
+		res = title
+	} else {
+		res = author
+		if len(author) > 0 {
+			res += " - "
+		}
+		res += fd.defaultName
+	}
+	return res
+}
+
+func (fd *MediaFile) copyCategoryTo(m *MediaItem) {
+	tcon := fd.Frame("TCON")
+	if tcon != nil {
+		m.Item.Categories = append(m.Item.Categories, Text{Value: trimmed(tcon.String())})
+	}
+}
+
+func (fd *MediaFile) yearFormatted() string {
+	year := fd.Year()
+	if len(year) > 0 {
+		t, err := time.Parse("20060102", year)
+		if err != nil {
+			t, err = time.Parse("20060102", year[0:len(year)-1])
+			if err != nil {
+				t, err = time.Parse("2006", year)
+				if err != nil {
+					t, err = time.Parse("20060201", year)
+					if err != nil {
+						return ""
+					}
+				}
+			}
+		}
+		return t.Format(time.RFC1123Z)
+	}
+	return trimmed(year)
+}
+
+func (fd *MediaFile) copyMetaTo(m *MediaItem) {
+	m.Title = fd.titleArtist()
+	m.Item.PubDate = fd.yearFormatted()
+	fd.copyCategoryTo(m)
+}
+
 func (m *MediaItem) addMeta(path, defaultName string, source *Source) {
 	fd, err := id3.Open(path)
 	if err != nil {
 		m.Item.Title = defaultName
 	} else {
+		media := &MediaFile{fd, defaultName}
 		defer fd.Close()
-		title := trimmed(fd.Title())
-		author := trimmed(fd.Artist())
-		if len(title) > 0 {
-			m.Item.Title = title
-		} else {
-			m.Item.Title = author
-			if len(author) > 0 {
-				m.Item.Title += " - "
-			}
-			m.Item.Title += defaultName
-		}
-		m.Item.Subtitle = author
-		tcon := fd.Frame("TCON")
-		if tcon != nil {
-			m.Item.Categories = append(m.Item.Categories, Text{Value: trimmed(tcon.String())})
-		}
-		m.Item.PubDate = formatYear(fd.Year())
+		media.copyMetaTo(m)
 		if source.autoImage && len(source.image) == 0 {
-			source.image = readImage(fd)
-			if len(source.image) > 0 {
-				hasher := sha1.New()
-				hasher.Write(source.image)
-				source.channel.Images = append(source.channel.Images,
-					Image{Title: source.channel.Title, Link: source.channel.Link, Url: source.channel.Link + base64.URLEncoding.EncodeToString(hasher.Sum(nil))})
-			}
-
+			source.SetImage(readImage(fd))
 		}
 	}
 }
@@ -125,6 +138,16 @@ func NewSource(root string, recursive bool, publicUrl string) *Source {
 
 func (s *Source) SetFileType(fileType string) {
 	s.fileType = fileType
+}
+
+func (s *Source) SetImage(image []byte) {
+	s.image = image
+	if len(image) > 0 {
+		hasher := sha1.New()
+		hasher.Write(image)
+		s.channel.Images = append(s.channel.Images,
+			Image{Title: s.channel.Title, Link: s.channel.Link, Url: s.channel.Link + base64.URLEncoding.EncodeToString(hasher.Sum(nil))})
+	}
 }
 
 func (s *Source) SetChannel(title, link, description, language string) {
