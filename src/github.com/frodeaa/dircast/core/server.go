@@ -24,6 +24,7 @@ func Log(handler http.Handler) http.Handler {
 		handler.ServeHTTP(w, r)
 	})
 }
+
 func isImagePath(path string, images []Image) bool {
 	for i := 0; i < len(images); i++ {
 		if strings.HasSuffix(images[i].Url, path) {
