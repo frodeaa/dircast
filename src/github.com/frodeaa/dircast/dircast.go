@@ -5,8 +5,10 @@ import (
 	dircast "github.com/frodeaa/dircast/core"
 	kingpin "gopkg.in/alecthomas/kingpin.v1"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -22,6 +24,17 @@ var (
 	fileType    = kingpin.Flag("file", "File type to include in the RSS document").Short('f').Default("mp3").String()
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
+
+func onShutdown(message string) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		fmt.Printf("\x1b[31;1m%v\x1b[0m\n", message)
+		os.Exit(1)
+	}()
+}
 
 func main() {
 
@@ -49,6 +62,7 @@ func main() {
 		fmt.Printf("%s: %v\n", os.Args[0], err)
 	} else {
 		if *bind {
+			onShutdown("dircast stopped.")
 			err = dircast.Server(*source, *logEnabled)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)
