@@ -25,6 +25,13 @@ var (
 	path        = kingpin.Arg("directory", "directory to read files relative from").Required().ExistingDir()
 )
 
+func writeStartupMsg(workdir string, url string) {
+	fmt.Printf(
+		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
+		"Starting up dircast, serving", workdir, url)
+	fmt.Println("Hit CTRL-C to stop the server")
+}
+
 func onShutdown(message string) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
@@ -63,6 +70,7 @@ func main() {
 	} else {
 		if *bind {
 			onShutdown("dircast stopped.")
+			writeStartupMsg(source.Root, source.PublicUrl)
 			err = dircast.Server(*source, *logEnabled)
 			if err != nil {
 				fmt.Printf("error: %v\n", err)

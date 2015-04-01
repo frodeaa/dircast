@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -42,13 +41,6 @@ func (rss *rssHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func writeStartupMsg(workdir string, url string) {
-	fmt.Printf(
-		"\x1b[33;1m%v\x1b[0m \x1b[36;1m%v\x1b[0m \x1b[33;1mon:\x1b[0m \x1b[36;1m%v\x1b[0m\n",
-		"Starting up dircast, serving", workdir, url)
-	fmt.Println("Hit CTRL-C to stop the server")
-}
-
 func contentPath(url *url.URL) string {
 	path := url.Path
 	if !strings.HasSuffix(path, "/") {
@@ -59,11 +51,8 @@ func contentPath(url *url.URL) string {
 
 func Server(source Source, logEnabled bool) error {
 
-	url, _ := url.Parse(source.publicUrl)
+	url, _ := url.Parse(source.PublicUrl)
 	http.Handle(contentPath(url), NewRssHandler(source))
-
-	writeStartupMsg(source.Root, source.publicUrl)
-
 	if logEnabled {
 		http.ListenAndServe(url.Host, Log(http.DefaultServeMux))
 	}

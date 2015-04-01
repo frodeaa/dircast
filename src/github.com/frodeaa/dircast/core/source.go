@@ -20,7 +20,7 @@ const (
 type Source struct {
 	channel   Channel
 	Root      string
-	publicUrl string
+	PublicUrl string
 	recursive bool
 	fileType  string
 	autoImage bool
@@ -134,7 +134,7 @@ func NewSource(root string, recursive bool, publicUrl string) *Source {
 	return &Source{
 		Root:      root,
 		recursive: recursive,
-		publicUrl: publicUrl,
+		PublicUrl: publicUrl,
 		channel:   *channel,
 		fileType:  DEFAULT_FILE_TYPE}
 }
@@ -169,7 +169,7 @@ func (s *Source) SetAutoImage(autoImage bool) {
 }
 
 func (s *Source) addFile(path string, info os.FileInfo) {
-	url := fileUrl(path[len(s.Root)-1:], s.publicUrl)
+	url := fileUrl(path[len(s.Root)-1:], s.PublicUrl)
 	item := MediaItem{Item{Enclosure: Enclosure{Length: info.Size(), Type: "audio/mpeg",
 		Url: url}, Guid: url}}
 	item.addMeta(path, info.Name(), s)
