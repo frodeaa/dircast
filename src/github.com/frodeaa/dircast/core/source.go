@@ -48,6 +48,26 @@ func fileUrl(relativePath string, baseUrl string) string {
 	return Url.String()
 }
 
+func formatYear(year string) string {
+	if len(year) > 0 {
+		t, err := time.Parse("20060102", year)
+		if err != nil {
+			t, err = time.Parse("20060102", year[0:len(year)-1])
+			if err != nil {
+				t, err = time.Parse("2006", year)
+				if err != nil {
+					t, err = time.Parse("20060201", year)
+					if err != nil {
+						return ""
+					}
+				}
+			}
+		}
+		return t.Format(time.RFC1123Z)
+	}
+	return trimmed(year)
+}
+
 func (fd *MediaFile) titleArtist() string {
 	title := trimmed(fd.Title())
 	author := trimmed(fd.Artist())
@@ -84,24 +104,7 @@ func (fd *MediaFile) copyCategoryTo(m *MediaItem) {
 }
 
 func (fd *MediaFile) yearFormatted() string {
-	year := fd.Year()
-	if len(year) > 0 {
-		t, err := time.Parse("20060102", year)
-		if err != nil {
-			t, err = time.Parse("20060102", year[0:len(year)-1])
-			if err != nil {
-				t, err = time.Parse("2006", year)
-				if err != nil {
-					t, err = time.Parse("20060201", year)
-					if err != nil {
-						return ""
-					}
-				}
-			}
-		}
-		return t.Format(time.RFC1123Z)
-	}
-	return trimmed(year)
+	return formatYear(fd.Year())
 }
 
 func (fd *MediaFile) copyMetaTo(m *MediaItem) {
