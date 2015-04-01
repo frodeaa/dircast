@@ -48,18 +48,6 @@ func fileUrl(relativePath string, baseUrl string) string {
 	return Url.String()
 }
 
-func readImage(fd *id3.File) []byte {
-	var data []byte
-	apic := fd.Frame("APIC")
-	if apic != nil {
-		switch t := apic.(type) {
-		case *v2.ImageFrame:
-			data = v2.ImageFrame(*t).Data()
-		}
-	}
-	return data
-}
-
 func (fd *MediaFile) titleArtist() string {
 	title := trimmed(fd.Title())
 	author := trimmed(fd.Artist())
@@ -74,6 +62,18 @@ func (fd *MediaFile) titleArtist() string {
 		res += fd.defaultName
 	}
 	return res
+}
+
+func (fd *MediaFile) readImage() []byte {
+	var data []byte
+	apic := fd.Frame("APIC")
+	if apic != nil {
+		switch t := apic.(type) {
+		case *v2.ImageFrame:
+			data = v2.ImageFrame(*t).Data()
+		}
+	}
+	return data
 }
 
 func (fd *MediaFile) copyCategoryTo(m *MediaItem) {
@@ -119,7 +119,7 @@ func (m *MediaItem) addMeta(path, defaultName string, source *Source) {
 		defer fd.Close()
 		media.copyMetaTo(m)
 		if source.autoImage && len(source.image) == 0 {
-			source.SetImage(readImage(fd))
+			source.SetImage(media.readImage())
 		}
 	}
 }
