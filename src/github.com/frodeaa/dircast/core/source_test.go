@@ -12,7 +12,6 @@ func TestTrimmed(t *testing.T) {
 		{string(append([]byte("value"), 0x00)), "value"},
 		{"   value    ", "value"},
 		{"", ""},
-		{"NOT_A_YEAR", ""},
 	}
 	for _, c := range cases {
 		got := trimmed(c.in)
