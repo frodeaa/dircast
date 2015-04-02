@@ -1,4 +1,4 @@
-# dircast
+# dircast [![Build Status](https://travis-ci.org/frodeaa/dircast.svg)](https://travis-ci.org/frodeaa/dircast)
 
 Simple tool to generate RSS feed
 from mp3 files found in a directory
