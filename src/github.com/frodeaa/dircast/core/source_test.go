@@ -4,6 +4,25 @@ import (
 	"testing"
 )
 
+func TestTrimmed(t *testing.T) {
+
+	cases := []struct {
+		in, want string
+	}{
+		{string(append([]byte("value"), 0x00)), "value"},
+		{"   value    ", "value"},
+		{"", ""},
+		{"NOT_A_YEAR", ""},
+	}
+	for _, c := range cases {
+		got := trimmed(c.in)
+		if got != c.want {
+			t.Errorf("trimmed(%q) == %q, want %q", c.in, got, c.want)
+		}
+	}
+
+}
+
 func TestFormatYear(t *testing.T) {
 	cases := []struct {
 		in, want string

@@ -38,7 +38,7 @@ type MediaItem struct {
 
 func trimmed(value string) string {
 	cutset := string(rune(0))
-	return strings.TrimRight(value, cutset)
+	return strings.Trim(strings.TrimRight(value, cutset), " ")
 }
 
 func fileUrl(relativePath string, baseUrl string) string {
