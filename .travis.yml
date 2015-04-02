@@ -1,4 +1,4 @@
-language: golang
+language: go
 
 script:
   make build && make test
