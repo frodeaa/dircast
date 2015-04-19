@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-const (
-	DEFAULT_FILE_TYPE     = "mp3"
-	DEFAULT_CHANNEL_TITLE = "RSS FEED"
-)
-
 type Source struct {
 	channel   Channel
 	Root      string
@@ -127,20 +122,21 @@ func (m *MediaItem) addMeta(path, defaultName string, source *Source) {
 	}
 }
 
-func NewSource(root string, recursive bool, publicUrl string) *Source {
+func NewSource(root string, recursive bool, publicUrl,
+	title, description, language, filetype string, autoImage bool) *Source {
 	channel := &Channel{
-		PubDate: time.Now().Format(time.RFC1123Z),
-		Title:   DEFAULT_CHANNEL_TITLE}
+		PubDate:     time.Now().Format(time.RFC1123Z),
+		Title:       title,
+		Link:        publicUrl,
+		Description: description,
+		Language:    language}
 	return &Source{
 		Root:      root,
 		recursive: recursive,
 		PublicUrl: publicUrl,
 		channel:   *channel,
-		fileType:  DEFAULT_FILE_TYPE}
-}
-
-func (s *Source) SetFileType(fileType string) {
-	s.fileType = fileType
+		fileType:  filetype,
+		autoImage: autoImage}
 }
 
 func (s *Source) SetImage(image []byte) {
@@ -153,19 +149,8 @@ func (s *Source) SetImage(image []byte) {
 	}
 }
 
-func (s *Source) SetChannel(title, link, description, language string) {
-	s.channel.Title = title
-	s.channel.Link = link
-	s.channel.Description = description
-	s.channel.Language = language
-}
-
 func (s *Source) SetChannelImageUrl(url string) {
 	s.channel.Images = append(s.channel.Images, Image{Title: s.channel.Title, Link: s.channel.Link, Url: url})
-}
-
-func (s *Source) SetAutoImage(autoImage bool) {
-	s.autoImage = autoImage
 }
 
 func (s *Source) addFile(path string, info os.FileInfo) {

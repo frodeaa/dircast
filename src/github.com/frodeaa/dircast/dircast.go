@@ -56,10 +56,7 @@ func main() {
 		*autoImage = false
 	}
 
-	source := dircast.NewSource(*path, *recursive, (*baseUrl).String())
-	source.SetChannel(*title, (*baseUrl).String(), *description, *language)
-	source.SetFileType(*fileType)
-	source.SetAutoImage(*autoImage)
+	source := dircast.NewSource(*path, *recursive, (*baseUrl).String(), *title, *description, *language, *fileType, *autoImage)
 	if *imageUrl != nil {
 		source.SetChannelImageUrl((*imageUrl).String())
 	}
