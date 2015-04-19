@@ -43,24 +43,30 @@ func fileUrl(relativePath string, baseUrl string) string {
 	return Url.String()
 }
 
+func formatYearRFC1123Z(pattern, year string) (string, error) {
+	t, err := time.Parse(pattern, year)
+	if err != nil {
+		return "", err
+	}
+	return t.Format(time.RFC1123Z), nil
+}
+
 func formatYear(year string) string {
 	if len(year) > 0 {
-		t, err := time.Parse("20060102", year)
-		if err != nil {
-			t, err = time.Parse("20060102", year[0:len(year)-1])
-			if err != nil {
-				t, err = time.Parse("2006", year)
-				if err != nil {
-					t, err = time.Parse("20060201", year)
-					if err != nil {
-						return ""
-					}
-				}
-			}
+		t, err := formatYearRFC1123Z("20060102", year)
+		if err == nil {
+			return t
 		}
-		return t.Format(time.RFC1123Z)
+		t, err = formatYearRFC1123Z("2006", year)
+		if err == nil {
+			return t
+		}
+		t, err = formatYearRFC1123Z("20060201", year)
+		if err == nil {
+			return t
+		}
 	}
-	return trimmed(year)
+	return ""
 }
 
 func (fd *MediaFile) titleArtist() string {
