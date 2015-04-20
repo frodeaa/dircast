@@ -51,7 +51,12 @@ func contentPath(url *url.URL) string {
 
 func Server(source Source, logEnabled bool) error {
 
-	url, _ := url.Parse(source.PublicUrl)
+	url, err := url.Parse(source.PublicUrl)
+
+	if err != nil {
+		return err
+	}
+
 	http.Handle(contentPath(url), NewRssHandler(source))
 	if logEnabled {
 		http.ListenAndServe(url.Host, Log(http.DefaultServeMux))
