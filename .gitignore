@@ -1,6 +1,6 @@
 .idea/
+bin
 dircast.iml
-dircast
 pkg
 *.swp
 .DS_Store
