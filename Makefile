@@ -3,7 +3,7 @@
 OUT = ./bin/dircast
 DIRCAST = github.com/frodeaa/dircast
 
-GOPATH := ${PWD}:${PWD}/vendor:${GOPATH}
+GOPATH := ${PWD}:${PWD}/vendor
 export GOPATH
 
 prefix=/usr/local
