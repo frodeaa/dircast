@@ -17,7 +17,7 @@ var (
 	logEnabled  = kingpin.Flag("log", "Enable log of HTTP requests").Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
 	autoImage   = kingpin.Flag("auto-image", "Resolve RSS image automatically, will use ID3 attached image, image overrides this option, only available in combination with bind").Short('a').Bool()
-	language    = kingpin.Flag("language", "the language of the RSS document, a ISO 639 value").Short('l').String()
+	language    = kingpin.Flag("language", "the language of the RSS document, examples: 'no' 'en-us', (ISO 639)").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
 	description = kingpin.Flag("description", "RSS channel description").Short('d').String()
 	imageUrl    = kingpin.Flag("image", "Image URL for the RSS channel image").Short('i').URL()
