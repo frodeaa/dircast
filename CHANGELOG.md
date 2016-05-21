@@ -1,3 +1,14 @@
+## 0.4.0 (2016-05-21)
+
+Features:
+
+ - adds a `--log` to enable log if HTTP request
+
+Bugs:
+
+ - fix trailing nulls read from ID3 tag
+ - fix Makefile, build would fail if GOPATH was initial empty
+
 ## 0.3.0 (2015-03-29)
 
 Features:

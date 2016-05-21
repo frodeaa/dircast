@@ -45,7 +45,7 @@ func onShutdown(message string) {
 
 func main() {
 
-	kingpin.Version("0.3.0")
+	kingpin.Version("0.4.0")
 	kingpin.Parse()
 
 	if !strings.HasSuffix((*baseUrl).Path, "/") {
