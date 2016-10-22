@@ -51,6 +51,10 @@ func formatYearRFC1123Z(pattern, year string) (string, error) {
 	return t.Format(time.RFC1123Z), nil
 }
 
+func formatUrl(url string) string {
+	return "http://" + strings.TrimPrefix(url, "http://")
+}
+
 func formatYear(year string) string {
 	if len(year) > 0 {
 		t, err := formatYearRFC1123Z("20060102", year)
@@ -133,13 +137,13 @@ func NewSource(root string, recursive bool, publicUrl,
 	channel := &Channel{
 		PubDate:     time.Now().Format(time.RFC1123Z),
 		Title:       title,
-		Link:        publicUrl,
+		Link:        formatUrl(publicUrl),
 		Description: description,
 		Language:    language}
 	return &Source{
 		Root:      root,
 		recursive: recursive,
-		PublicUrl: publicUrl,
+		PublicUrl: formatUrl(publicUrl),
 		channel:   *channel,
 		fileType:  filetype,
 		autoImage: autoImage}

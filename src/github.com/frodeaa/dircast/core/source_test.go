@@ -22,6 +22,22 @@ func TestTrimmed(t *testing.T) {
 
 }
 
+func TestFormatUrl(t *testing.T) {
+	cases := []struct {
+		in, want string
+	}{
+		{"http://127.0.0.1", "http://127.0.0.1"},
+		{"127.0.0.1", "http://127.0.0.1"},
+		{"www.example.com", "http://www.example.com"},
+	}
+	for _, c := range cases {
+		got := formatUrl(c.in)
+		if got != c.want {
+			t.Errorf("formatUrl(%q) == %q, want %q", c.in, got, c.want)
+		}
+	}
+}
+
 func TestFormatYear(t *testing.T) {
 	cases := []struct {
 		in, want string
