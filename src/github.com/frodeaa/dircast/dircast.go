@@ -16,6 +16,7 @@ var (
 	bind        = kingpin.Flag("bind", "Start HTTP server, bind to the server").Short('b').Bool()
 	logEnabled  = kingpin.Flag("log", "Enable log of HTTP requests").Bool()
 	recursive   = kingpin.Flag("recursive", "how to handle the directory scan").Short('r').Bool()
+	filename    = kingpin.Flag("filename", "include filename in item title").Short('n').Bool()
 	autoImage   = kingpin.Flag("auto-image", "Resolve RSS image automatically, will use ID3 attached image, image overrides this option, only available in combination with bind").Short('a').Bool()
 	language    = kingpin.Flag("language", "the language of the RSS document, examples: 'no' 'en-us', (ISO 639)").Short('l').String()
 	title       = kingpin.Flag("title", "RSS channel title").Short('t').Default("RSS FEED").String()
@@ -60,7 +61,7 @@ func main() {
 	if *imageUrl != nil {
 		source.SetChannelImageUrl((*imageUrl).String())
 	}
-	err := filepath.Walk(*path, source.HandleWalk())
+	err := filepath.Walk(*path, source.HandleWalk(*filename))
 
 	if err != nil {
 		fmt.Printf("%s: %v\n", os.Args[0], err)

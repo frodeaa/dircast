@@ -118,7 +118,7 @@ func (fd *MediaFile) copyMetaTo(m *MediaItem) {
 	fd.copyCategoryTo(m)
 }
 
-func (m *MediaItem) addMeta(path, defaultName string, source *Source) {
+func (m *MediaItem) addMeta(path, defaultName string, source *Source, includeFileName bool) {
 	fd, err := id3.Open(path)
 	if err != nil {
 		m.Item.Title = defaultName
@@ -130,6 +130,11 @@ func (m *MediaItem) addMeta(path, defaultName string, source *Source) {
 			source.SetImage(media.readImage())
 		}
 	}
+
+	if includeFileName {
+		m.Title = m.Title + " - " + filepath.Base(path)
+	}
+
 }
 
 func NewSource(root string, recursive bool, publicUrl,
@@ -163,15 +168,15 @@ func (s *Source) SetChannelImageUrl(url string) {
 	s.channel.Images = append(s.channel.Images, Image{Title: s.channel.Title, Link: s.channel.Link, Url: url})
 }
 
-func (s *Source) addFile(path string, info os.FileInfo) {
+func (s *Source) addFile(path string, info os.FileInfo, includeFileName bool) {
 	url := fileUrl(path[len(s.Root)-1:], s.PublicUrl)
 	item := MediaItem{Item{Enclosure: Enclosure{Length: info.Size(), Type: "audio/mpeg",
 		Url: url}, Guid: url}}
-	item.addMeta(path, info.Name(), s)
+	item.addMeta(path, info.Name(), s, includeFileName)
 	s.channel.Items = append(s.channel.Items, item.Item)
 }
 
-func (s *Source) HandleWalk() filepath.WalkFunc {
+func (s *Source) HandleWalk(includeFileName bool) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -187,7 +192,7 @@ func (s *Source) HandleWalk() filepath.WalkFunc {
 
 		matched, _ := filepath.Match("*."+s.fileType, info.Name())
 		if matched {
-			s.addFile(path, info)
+			s.addFile(path, info, includeFileName)
 		}
 		return nil
 	}
