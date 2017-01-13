@@ -12,11 +12,12 @@ from mp3 files found in a directory
       -b, --bind         Start HTTP server, bind to the server
       --log              Enable log of HTTP requests
       -r, --recursive    how to handle the directory scan
+      -n, --filename     include filename in item title
       -a, --auto-image   Resolve RSS image automatically, will use ID3 attached
                          image, image overrides this option, only available in
                          combination with bind
       -l, --language=LANGUAGE
-                         the language of the RSS document, a ISO 639 value
+                         the language of the RSS document, examples: 'no' 'en-us', (ISO 639)
       -t, --title="RSS FEED"
                          RSS channel title
       -d, --description=DESCRIPTION
